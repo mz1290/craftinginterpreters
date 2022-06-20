@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/mz1290/golox/internal/pkg/scanner"
 )
@@ -53,11 +52,8 @@ func (l *Lox) RunPrompt() error {
 			return l.Err
 		}
 
-		// Trim the trailing newline
-		line = strings.TrimSuffix(line, "\n")
-
 		// Check if user signaled end of session
-		if line == "exit" {
+		if line == "exit\n" {
 			break
 		}
 

@@ -70,7 +70,7 @@ func (s *Scanner) scanToken() {
 		s.addToken(token.STAR, nil)
 	case '!':
 		var t token.Type
-		if s.match('=') {
+		if s.match('=') { // Maybe write a ternary-like token type func to avoid this
 			t = token.BANG_EQUAL
 		} else {
 			t = token.BANG
