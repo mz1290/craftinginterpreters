@@ -2,7 +2,9 @@ package scanner
 
 import (
 	"fmt"
+	"strconv"
 
+	"github.com/mz1290/golox/internal/pkg/common"
 	"github.com/mz1290/golox/internal/pkg/token"
 )
 
@@ -113,10 +115,65 @@ func (s *Scanner) scanToken() {
 		// ignore
 	case '\n':
 		s.line++
+	case '"':
+		s.string()
 	default:
-		s.Errors = append(s.Errors, &ScannerErr{s.line, " Scanner",
-			fmt.Sprintf("Unexpected character %q", c)})
+		if common.IsDigit(c) {
+			s.number()
+		} else {
+			s.Errors = append(s.Errors, &ScannerErr{s.line, " Scanner",
+				fmt.Sprintf("Unexpected character %q", c)})
+		}
 	}
+}
+
+func (s *Scanner) number() {
+	for common.IsDigit(s.peek()) {
+		s.advance()
+	}
+
+	// Look for fractional part
+	if s.peek() == '.' && common.IsDigit(s.peekNext()) {
+		// Consumer the '.'
+		s.advance()
+
+		for common.IsDigit(s.peek()) {
+			s.advance()
+		}
+	}
+
+	// Convert string to Go's float64
+	num, err := strconv.ParseFloat(s.source[s.start:s.current], 64)
+	if err != nil {
+		s.Errors = append(s.Errors, &ScannerErr{s.line, " Scanner",
+			fmt.Sprintf("Failed to convert %q to Lox number",
+				s.source[s.start:s.current])})
+		return
+	}
+
+	s.addToken(token.NUMBER, num)
+}
+
+func (s *Scanner) string() {
+	for s.peek() != '"' && !s.isAtEnd() {
+		if s.peek() == '\n' {
+			s.line++
+		}
+		s.advance()
+	}
+
+	if s.isAtEnd() {
+		s.Errors = append(s.Errors,
+			&ScannerErr{s.line, " Scanner", "Unterminated string."})
+		return
+	}
+
+	// The closing "
+	s.advance()
+
+	// Trim the surrounding quotes
+	value := s.source[s.start+1 : s.current-1]
+	s.addToken(token.STRING, value)
 }
 
 // lookahead, we do not consume and advance
@@ -126,6 +183,14 @@ func (s Scanner) peek() byte {
 	}
 
 	return s.source[s.current]
+}
+
+func (s Scanner) peekNext() byte {
+	if s.current+1 >= len(s.source) {
+		return 0
+	}
+
+	return s.source[s.current+1]
 }
 
 func (s *Scanner) match(expected byte) bool {
