@@ -15,5 +15,5 @@ func New(t Type, lexeme string, literal interface{}, line int) *Token {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"{Type: %s\tlexeme: %s\tline: %d}", t.Type, t.lexeme, t.line)
+		"{type: %-13s lexeme: %-15s line: %d}", t.Type, t.lexeme, t.line)
 }

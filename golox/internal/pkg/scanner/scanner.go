@@ -120,11 +120,29 @@ func (s *Scanner) scanToken() {
 	default:
 		if common.IsDigit(c) {
 			s.number()
+		} else if common.IsAlpha(c) {
+			s.identifier()
 		} else {
 			s.Errors = append(s.Errors, &ScannerErr{s.line, " Scanner",
 				fmt.Sprintf("Unexpected character %q", c)})
 		}
 	}
+}
+
+func (s *Scanner) identifier() {
+	for common.IsAlphaNumeric(s.peek()) {
+		s.advance()
+	}
+
+	text := s.source[s.start:s.current]
+	ty, ok := token.Keywords[text]
+
+	// If text was not a reserver word, it is an identifier
+	if !ok {
+		ty = token.IDENTIFIER
+	}
+
+	s.addToken(ty, nil)
 }
 
 func (s *Scanner) number() {
