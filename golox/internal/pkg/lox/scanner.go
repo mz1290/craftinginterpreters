@@ -1,4 +1,4 @@
-package scanner
+package lox
 
 import (
 	"fmt"
@@ -9,26 +9,17 @@ import (
 )
 
 type Scanner struct {
+	runtime *Lox
 	source  string
 	tokens  []*token.Token
 	start   int
 	current int
 	line    int
-	Errors  []*ScannerErr
 }
 
-type ScannerErr struct {
-	Line    int
-	Where   string
-	Message string
-}
-
-func (se ScannerErr) Error() string {
-	return fmt.Sprintf("[line %d] Error%s: %q", se.Line, se.Where, se.Message)
-}
-
-func New(source string) *Scanner {
+func NewScanner(lox *Lox, source string) *Scanner {
 	return &Scanner{
+		runtime: lox,
 		source:  source,
 		start:   0,
 		current: 0,
@@ -123,8 +114,7 @@ func (s *Scanner) scanToken() {
 		} else if common.IsAlpha(c) {
 			s.identifier()
 		} else {
-			s.Errors = append(s.Errors, &ScannerErr{s.line, " Scanner",
-				fmt.Sprintf("Unexpected character %q", c)})
+			s.runtime.ErrorMessage(s.line, "unexpected character")
 		}
 	}
 }
@@ -163,9 +153,8 @@ func (s *Scanner) number() {
 	// Convert string to Go's float64
 	num, err := strconv.ParseFloat(s.source[s.start:s.current], 64)
 	if err != nil {
-		s.Errors = append(s.Errors, &ScannerErr{s.line, " Scanner",
-			fmt.Sprintf("Failed to convert %q to Lox number",
-				s.source[s.start:s.current])})
+		s.runtime.ErrorMessage(s.line, fmt.Sprintf("failed to convert %q to "+
+			"Lox number", s.source[s.start:s.current]))
 		return
 	}
 
@@ -181,8 +170,7 @@ func (s *Scanner) string() {
 	}
 
 	if s.isAtEnd() {
-		s.Errors = append(s.Errors,
-			&ScannerErr{s.line, " Scanner", "Unterminated string."})
+		s.runtime.ErrorMessage(s.line, "unterminated string")
 		return
 	}
 

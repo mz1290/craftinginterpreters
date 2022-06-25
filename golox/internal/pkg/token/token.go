@@ -1,12 +1,14 @@
 package token
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Token struct {
 	Type    Type
 	Lexeme  string
-	literal interface{}
-	line    int
+	Literal interface{}
+	Line    int
 }
 
 func New(t Type, lexeme string, literal interface{}, line int) *Token {
@@ -15,5 +17,5 @@ func New(t Type, lexeme string, literal interface{}, line int) *Token {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"{type: %-13s lexeme: %-15s line: %d}", t.Type, t.Lexeme, t.line)
+		"{type: %-13s lexeme: %-15s line: %d}", t.Type, t.Lexeme, t.Line)
 }

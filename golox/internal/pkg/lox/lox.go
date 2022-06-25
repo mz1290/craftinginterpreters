@@ -8,36 +8,33 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mz1290/golox/internal/pkg/scanner"
+	"github.com/mz1290/golox/internal/pkg/ast"
+	"github.com/mz1290/golox/internal/pkg/token"
 )
 
-type LoxError struct {
-	Line    int
-	Where   string
-	Message string
-}
-
-func (le LoxError) Error() string {
-	return fmt.Sprintf("[line %d] Error%s: %q", le.Line, le.Where, le.Message)
-}
-
 type Lox struct {
-	Err *LoxError
+	HadError bool
 }
 
 func New() *Lox {
-	return &Lox{}
+	return &Lox{
+		HadError: false,
+	}
 }
 
 // Read and execute file
 func (l *Lox) RunFile(path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		l.Err = &LoxError{0, "", err.Error()}
-		return l.Err
+		return err
 	}
 
-	return l.run(string(data))
+	l.run(string(data))
+	if l.HadError {
+		return fmt.Errorf("Lox encountered an error while executing %s", path)
+	} else {
+		return nil
+	}
 }
 
 // Start interactive golox prompt
@@ -48,8 +45,7 @@ func (l *Lox) RunPrompt() error {
 		fmt.Printf("> ")
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			l.Err = &LoxError{0, "", err.Error()}
-			return l.Err
+			return err
 		}
 
 		// Check if user signaled end of session
@@ -58,27 +54,49 @@ func (l *Lox) RunPrompt() error {
 		}
 
 		// Execute user lox statement or expression
-		if err = l.run(line); err != nil {
-			fmt.Println(err)
-		}
+		l.run(line)
+		l.HadError = false
 	}
 
 	return nil
 }
 
-func (l *Lox) run(source string) error {
+func (l *Lox) run(source string) {
 	// create a new scanner instance
-	s := scanner.New(source)
+	s := NewScanner(l, source)
 	tokens := s.ScanTokens()
+
+	parser := NewParser(l, tokens)
+	expression := parser.Parse()
+
+	// Stop if there was a syntax error
+	if l.HadError {
+		return
+	}
+
+	// Print ast
+	p := ast.ASTPrinter{}
+	p.Print(expression)
 
 	for _, token := range tokens {
 		fmt.Println(token)
 	}
+}
 
-	// Check if scanner encountered any errors
-	for _, e := range s.Errors {
-		fmt.Println(e)
+//ErrorMessage prints error message as stderr
+func (l *Lox) ErrorMessage(line int, message string) {
+	l.report(line, "", message)
+}
+
+func (l *Lox) ErrorTokenMessage(t *token.Token, message string) {
+	if t.Type == token.EOF {
+		l.report(t.Line, " at end", message)
+	} else {
+		l.report(t.Line, fmt.Sprintf(" at %q", t.Lexeme), message)
 	}
+}
 
-	return nil
+func (l *Lox) report(line int, where string, message string) {
+	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %q\n", line, where, message)
+	l.HadError = true
 }

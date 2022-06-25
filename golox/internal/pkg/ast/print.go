@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+// In this example, the printer itself is our "visitor".
+// Print accepts an expression
+// Calls that expression's "Accept" with our visior
+// The expression then calls our visitors implementation of it's required
+// visitor function so we get the desired behavior
 type ASTPrinter struct{}
 
 func (p ASTPrinter) Print(expr Expr) string {
@@ -25,22 +30,22 @@ func (p ASTPrinter) Print(expr Expr) string {
 }
 
 func (p ASTPrinter) VisitBinaryExpr(expr Binary) (interface{}, error) {
-	return p.parenthesize(expr.operator.Lexeme, expr.left, expr.right)
+	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
 func (p ASTPrinter) VisitGroupingExpr(expr Grouping) (interface{}, error) {
-	return p.parenthesize("group", expr.expression)
+	return p.parenthesize("group", expr.Expression)
 }
 
 func (p ASTPrinter) VisitLiteralExpr(expr Literal) (interface{}, error) {
-	if expr.value == nil {
+	if expr.Value == nil {
 		return "nil", nil
 	}
-	return fmt.Sprintf("%v", expr.value), nil
+	return fmt.Sprintf("%v", expr.Value), nil
 }
 
 func (p ASTPrinter) VisitUnaryExpr(expr Unary) (interface{}, error) {
-	return p.parenthesize(expr.operator.Lexeme, expr.right)
+	return p.parenthesize(expr.Operator.Lexeme, expr.Right)
 }
 
 func (p ASTPrinter) parenthesize(name string, exprs ...Expr) (string, error) {

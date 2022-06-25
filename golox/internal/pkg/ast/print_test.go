@@ -9,16 +9,16 @@ import (
 
 func TestPrint(t *testing.T) {
 	var expression Expr = Binary{
-		left: Unary{
-			operator: *token.New(token.MINUS, "-", nil, 1),
-			right: Literal{
-				value: 123,
+		Left: Unary{
+			Operator: token.New(token.MINUS, "-", nil, 1),
+			Right: Literal{
+				Value: 123,
 			},
 		},
-		operator: *token.New(token.STAR, "*", nil, 1),
-		right: Grouping{
-			expression: Literal{
-				value: 45.67,
+		Operator: token.New(token.STAR, "*", nil, 1),
+		Right: Grouping{
+			Expression: Literal{
+				Value: 45.67,
 			},
 		},
 	}
