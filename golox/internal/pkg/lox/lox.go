@@ -9,43 +9,50 @@ import (
 	"os"
 
 	"github.com/mz1290/golox/internal/pkg/ast"
+	"github.com/mz1290/golox/internal/pkg/errors"
 	"github.com/mz1290/golox/internal/pkg/token"
 )
 
 type Lox struct {
-	HadError bool
+	HadError        bool // represents syntax/static errors
+	HadRuntimeError bool // errors during execution
+	Interpreter     *Interpreter
 }
 
 func New() *Lox {
-	return &Lox{
-		HadError: false,
+	l := &Lox{
+		HadError:        false,
+		HadRuntimeError: false,
 	}
+
+	l.Interpreter = NewInterpreter(l)
+	return l
 }
 
 // Read and execute file
-func (l *Lox) RunFile(path string) error {
+func (l *Lox) RunFile(path string) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		os.Exit(65)
 	}
 
 	l.run(string(data))
 	if l.HadError {
-		return fmt.Errorf("Lox encountered an error while executing %s", path)
-	} else {
-		return nil
+		os.Exit(65)
+	} else if l.HadRuntimeError {
+		os.Exit(70)
 	}
 }
 
 // Start interactive golox prompt
-func (l *Lox) RunPrompt() error {
+func (l *Lox) RunPrompt() {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
 		fmt.Printf("> ")
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			return err
+			os.Exit(65)
 		}
 
 		// Check if user signaled end of session
@@ -56,9 +63,8 @@ func (l *Lox) RunPrompt() error {
 		// Execute user lox statement or expression
 		l.run(line)
 		l.HadError = false
+		l.HadRuntimeError = false
 	}
-
-	return nil
 }
 
 func (l *Lox) run(source string) {
@@ -66,6 +72,7 @@ func (l *Lox) run(source string) {
 	s := NewScanner(l, source)
 	tokens := s.ScanTokens()
 
+	// create new parser instance
 	parser := NewParser(l, tokens)
 	expression := parser.Parse()
 
@@ -76,7 +83,10 @@ func (l *Lox) run(source string) {
 
 	// Print ast
 	p := ast.ASTPrinter{}
-	p.Print(expression)
+	fmt.Println(p.Print(expression))
+
+	// Execute/evaluate expression
+	l.Interpreter.Interpret(expression)
 
 	for _, token := range tokens {
 		fmt.Println(token)
@@ -99,4 +109,10 @@ func (l *Lox) ErrorTokenMessage(t *token.Token, message string) {
 func (l *Lox) report(line int, where string, message string) {
 	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %q\n", line, where, message)
 	l.HadError = true
+}
+
+func (l *Lox) RuntimeError(err error) {
+	e := err.(*errors.CustomErr)
+	fmt.Fprintf(os.Stderr, "[line %d] %s\n", e.Token.Line, err)
+	l.HadRuntimeError = true
 }
