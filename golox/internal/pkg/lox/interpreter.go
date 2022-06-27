@@ -17,14 +17,14 @@ func NewInterpreter(runtime *Lox) *Interpreter {
 	return &Interpreter{runtime: runtime}
 }
 
-func (i *Interpreter) Interpret(expr ast.Expr) {
-	value, err := i.evaluate(expr)
-	if err != nil {
-		i.runtime.RuntimeError(err)
-		return
+func (i *Interpreter) Interpret(statements []ast.Stmt) {
+	for _, stmt := range statements {
+		_, err := i.execute(stmt)
+		if err != nil {
+			i.runtime.RuntimeError(err)
+			return
+		}
 	}
-
-	fmt.Println(value)
 }
 
 func (i *Interpreter) VisitLiteralExpr(expr ast.Literal) (interface{}, error) {
@@ -60,6 +60,10 @@ func (i *Interpreter) VisitUnaryExpr(expr ast.Unary) (interface{}, error) {
 // evaluate sends the expression back into the interpreter's visitor implementation
 func (i *Interpreter) evaluate(expr ast.Expr) (interface{}, error) {
 	return expr.Accept(i)
+}
+
+func (i *Interpreter) execute(stmt ast.Stmt) (interface{}, error) {
+	return stmt.Accept(i)
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
@@ -136,5 +140,19 @@ func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
 	}
 
 	// Unreachable
+	return nil, errors.RunetimeError.New(nil, "unreachable")
+}
+
+func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, error) {
+	return i.evaluate(stmt.Expression)
+}
+
+func (i *Interpreter) VisitPrintStmt(stmt ast.Print) (interface{}, error) {
+	value, err := i.evaluate(stmt.Expression)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(common.Stringfy(value))
 	return nil, nil
 }

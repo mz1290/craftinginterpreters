@@ -23,14 +23,54 @@ func NewParser(l *Lox, tokens []*token.Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() ast.Expr {
+func (p *Parser) Parse() []ast.Stmt {
+	var statements []ast.Stmt
+
+	for !p.isAtEnd() {
+		statements = append(statements, p.statement())
+	}
+
+	return statements
+
+	/*
+		expr := p.expression()
+
+		if p.hadParseError {
+			return nil
+		} else {
+			return expr
+		}
+	*/
+}
+
+func (p *Parser) statement() ast.Stmt {
+	if p.match(token.PRINT) {
+		return p.printStatement()
+	}
+
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() ast.Stmt {
+	value := p.expression()
+
+	_, ok := p.consume(token.SEMICOLON)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ';' after value")
+	}
+
+	return ast.Print{Expression: value}
+}
+
+func (p *Parser) expressionStatement() ast.Stmt {
 	expr := p.expression()
 
-	if p.hadParseError {
-		return nil
-	} else {
-		return expr
+	_, ok := p.consume(token.SEMICOLON)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ';' after expression")
 	}
+
+	return ast.Expression{Expression: expr}
 }
 
 func (p *Parser) expression() ast.Expr {

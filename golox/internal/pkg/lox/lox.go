@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mz1290/golox/internal/pkg/ast"
 	"github.com/mz1290/golox/internal/pkg/errors"
 	"github.com/mz1290/golox/internal/pkg/token"
 )
@@ -74,7 +73,7 @@ func (l *Lox) run(source string) {
 
 	// create new parser instance
 	parser := NewParser(l, tokens)
-	expression := parser.Parse()
+	statements := parser.Parse()
 
 	// Stop if there was a syntax error
 	if l.HadError {
@@ -82,15 +81,15 @@ func (l *Lox) run(source string) {
 	}
 
 	// Print ast
-	p := ast.ASTPrinter{}
-	fmt.Println(p.Print(expression))
+	//p := ast.ASTPrinter{}
+	//fmt.Println(p.Print(expression))
 
 	// Execute/evaluate expression
-	l.Interpreter.Interpret(expression)
+	l.Interpreter.Interpret(statements)
 
-	for _, token := range tokens {
-		fmt.Println(token)
-	}
+	//for _, token := range tokens {
+	//	fmt.Println(token)
+	//}
 }
 
 //ErrorMessage prints error message as stderr
