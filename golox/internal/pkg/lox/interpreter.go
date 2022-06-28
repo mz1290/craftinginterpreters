@@ -10,11 +10,15 @@ import (
 )
 
 type Interpreter struct {
-	runtime *Lox
+	runtime     *Lox
+	environment *Environment
 }
 
 func NewInterpreter(runtime *Lox) *Interpreter {
-	return &Interpreter{runtime: runtime}
+	return &Interpreter{
+		runtime:     runtime,
+		environment: NewEnvironment(runtime),
+	}
 }
 
 func (i *Interpreter) Interpret(statements []ast.Stmt) {
@@ -54,7 +58,11 @@ func (i *Interpreter) VisitUnaryExpr(expr ast.Unary) (interface{}, error) {
 	}
 
 	// Unreachable
-	return nil, errors.RunetimeError.New(nil, "unreachable")
+	return nil, errors.RuntimeError.New(nil, "unreachable")
+}
+
+func (i *Interpreter) VisitVariableExpr(expr ast.Variable) (interface{}, error) {
+	return i.environment.Get(expr.Name), nil
 }
 
 // evaluate sends the expression back into the interpreter's visitor implementation
@@ -119,7 +127,7 @@ func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
 			return left.(string) + right.(string), nil
 		}
 
-		return nil, errors.RunetimeError.New(expr.Operator,
+		return nil, errors.RuntimeError.New(expr.Operator,
 			"operands must be two numbers or two strings")
 	case token.SLASH:
 		err := common.CheckNumberOperands(expr.Operator, left, right)
@@ -140,7 +148,7 @@ func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
 	}
 
 	// Unreachable
-	return nil, errors.RunetimeError.New(nil, "unreachable")
+	return nil, errors.RuntimeError.New(nil, "unreachable")
 }
 
 func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, error) {
@@ -154,5 +162,20 @@ func (i *Interpreter) VisitPrintStmt(stmt ast.Print) (interface{}, error) {
 	}
 
 	fmt.Println(common.Stringfy(value))
+	return nil, nil
+}
+
+func (i *Interpreter) VisitVarStmt(stmt ast.Var) (interface{}, error) {
+	var value interface{}
+	var err error
+
+	if stmt.Initializer != nil {
+		value, err = i.evaluate(stmt.Initializer)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	i.environment.Define(stmt.Name.Lexeme, value)
 	return nil, nil
 }

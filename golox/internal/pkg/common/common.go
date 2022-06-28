@@ -66,7 +66,7 @@ func CheckNumberOperand(operator *token.Token, operand interface{}) error {
 		return nil
 	}
 
-	return errors.RunetimeError.New(operator, "operand must be a number")
+	return errors.RuntimeError.New(operator, "operand must be a number")
 }
 
 func CheckNumberOperands(operator *token.Token, left, right interface{}) error {
@@ -74,7 +74,7 @@ func CheckNumberOperands(operator *token.Token, left, right interface{}) error {
 		return nil
 	}
 
-	return errors.RunetimeError.New(operator, "operands must be a numbers")
+	return errors.RuntimeError.New(operator, "operands must be a numbers")
 }
 
 func Stringfy(object interface{}) string {

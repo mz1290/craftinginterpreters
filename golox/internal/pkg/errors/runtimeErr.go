@@ -6,7 +6,7 @@ import (
 	"github.com/mz1290/golox/internal/pkg/token"
 )
 
-var RunetimeError = NewCustomErr("RuntimeError")
+var RuntimeError = NewCustomErr("RuntimeError")
 
 type CustomErr struct {
 	Token   *token.Token

@@ -27,7 +27,7 @@ func (p *Parser) Parse() []ast.Stmt {
 	var statements []ast.Stmt
 
 	for !p.isAtEnd() {
-		statements = append(statements, p.statement())
+		statements = append(statements, p.declaration())
 	}
 
 	return statements
@@ -62,6 +62,25 @@ func (p *Parser) printStatement() ast.Stmt {
 	return ast.Print{Expression: value}
 }
 
+func (p *Parser) varDeclaration() ast.Stmt {
+	name, ok := p.consume(token.IDENTIFIER)
+	if !ok {
+		p.NewParserError(p.peek(), "expected variable name")
+	}
+
+	var initializer ast.Expr
+	if p.match(token.EQUAL) {
+		initializer = p.expression()
+	}
+
+	p.consume(token.SEMICOLON)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ';' after variable declaration")
+	}
+
+	return ast.Var{Name: name, Initializer: initializer}
+}
+
 func (p *Parser) expressionStatement() ast.Stmt {
 	expr := p.expression()
 
@@ -75,6 +94,21 @@ func (p *Parser) expressionStatement() ast.Stmt {
 
 func (p *Parser) expression() ast.Expr {
 	return p.equality()
+}
+
+func (p *Parser) declaration() ast.Stmt {
+	if p.match(token.VAR) {
+		return p.varDeclaration()
+	}
+
+	res := p.statement()
+	if p.hadParseError {
+		p.synchronize()
+		p.hadParseError = false
+		return nil
+	}
+
+	return res
 }
 
 func (p *Parser) equality() ast.Expr {
@@ -151,6 +185,10 @@ func (p *Parser) primary() ast.Expr {
 
 	if p.match(token.NUMBER, token.STRING) {
 		return ast.Literal{Value: p.previous().Literal}
+	}
+
+	if p.match(token.IDENTIFIER) {
+		return ast.Variable{Name: p.previous()}
 	}
 
 	if p.match(token.LEFT_PAREN) {
