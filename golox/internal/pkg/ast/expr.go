@@ -10,6 +10,7 @@ type Expr interface {
 }
 
 type ExprVisitor interface {
+	VisitAssignExpr(expr Assign) (interface{}, error)
 	VisitBinaryExpr(expr Binary) (interface{}, error)
 	VisitGroupingExpr(expr Grouping) (interface{}, error)
 	VisitLiteralExpr(expr Literal) (interface{}, error)
@@ -19,6 +20,15 @@ type ExprVisitor interface {
 
 type ExprAcceptor interface {
 	Accept(v ExprVisitor) (interface{}, error)
+}
+
+type Assign struct {
+	Name *token.Token
+	Value Expr
+}
+
+func (x Assign) Accept(v ExprVisitor) (interface{}, error) {
+	return v.VisitAssignExpr(x)
 }
 
 type Binary struct {

@@ -8,14 +8,24 @@ import (
 )
 
 type Environment struct {
-	runtime *Lox
-	Values  map[string]interface{}
+	runtime   *Lox
+	Enclosing *Environment
+	Values    map[string]interface{}
 }
 
 func NewEnvironment(l *Lox) *Environment {
 	return &Environment{
-		runtime: l,
-		Values:  make(map[string]interface{}),
+		runtime:   l,
+		Enclosing: nil,
+		Values:    make(map[string]interface{}),
+	}
+}
+
+func NewLocalEnvironment(enclosing *Environment) *Environment {
+	return &Environment{
+		runtime:   enclosing.runtime,
+		Enclosing: enclosing,
+		Values:    make(map[string]interface{}),
 	}
 }
 
@@ -24,9 +34,28 @@ func (e Environment) Get(name *token.Token) interface{} {
 		return val
 	}
 
+	if e.Enclosing != nil {
+		return e.Enclosing.Get(name)
+	}
+
 	e.runtime.RuntimeError(errors.RuntimeError.New(name,
 		fmt.Sprintf("undefined variable %s", name.Lexeme)))
 	return nil
+}
+
+func (e *Environment) Assign(name *token.Token, value interface{}) {
+	if _, ok := e.Values[name.Lexeme]; ok {
+		e.Values[name.Lexeme] = value
+		return
+	}
+
+	if e.Enclosing != nil {
+		e.Enclosing.Assign(name, value)
+		return
+	}
+
+	e.runtime.RuntimeError(errors.RuntimeError.New(name,
+		fmt.Sprintf("undefined variable %s", name.Lexeme)))
 }
 
 func (e *Environment) Define(name string, value interface{}) {

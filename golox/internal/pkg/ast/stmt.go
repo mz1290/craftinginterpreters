@@ -10,7 +10,9 @@ type Stmt interface {
 }
 
 type StmtVisitor interface {
+	VisitBlockStmt(stmt Block) (interface{}, error)
 	VisitExpressionStmt(stmt Expression) (interface{}, error)
+	VisitIfStmt(stmt If) (interface{}, error)
 	VisitPrintStmt(stmt Print) (interface{}, error)
 	VisitVarStmt(stmt Var) (interface{}, error)
 }
@@ -19,12 +21,30 @@ type StmtAcceptor interface {
 	Accept(v StmtVisitor) (interface{}, error)
 }
 
+type Block struct {
+	Statements []Stmt
+}
+
+func (x Block) Accept(v StmtVisitor) (interface{}, error) {
+	return v.VisitBlockStmt(x)
+}
+
 type Expression struct {
 	Expression Expr
 }
 
 func (x Expression) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitExpressionStmt(x)
+}
+
+type If struct {
+	Condition Expr
+	ThenBranch Stmt
+	ElseBranch Stmt
+}
+
+func (x If) Accept(v StmtVisitor) (interface{}, error) {
+	return v.VisitIfStmt(x)
 }
 
 type Print struct {

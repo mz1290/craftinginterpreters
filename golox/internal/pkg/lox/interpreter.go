@@ -74,6 +74,22 @@ func (i *Interpreter) execute(stmt ast.Stmt) (interface{}, error) {
 	return stmt.Accept(i)
 }
 
+func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environment) {
+	previous := i.environment
+
+	i.environment = environment
+	for _, stmt := range statements {
+		i.execute(stmt)
+	}
+
+	i.environment = previous
+}
+
+func (i *Interpreter) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
+	i.executeBlock(stmt.Statements, NewLocalEnvironment(i.environment))
+	return nil, nil
+}
+
 func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
@@ -155,6 +171,18 @@ func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, err
 	return i.evaluate(stmt.Expression)
 }
 
+func (i *Interpreter) VisitIfStmt(stmt ast.If) (interface{}, error) {
+	condition, _ := i.evaluate(stmt.Condition)
+
+	if common.IsTruthy(condition) {
+		i.execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		i.execute(stmt.ElseBranch)
+	}
+
+	return nil, nil
+}
+
 func (i *Interpreter) VisitPrintStmt(stmt ast.Print) (interface{}, error) {
 	value, err := i.evaluate(stmt.Expression)
 	if err != nil {
@@ -178,4 +206,14 @@ func (i *Interpreter) VisitVarStmt(stmt ast.Var) (interface{}, error) {
 
 	i.environment.Define(stmt.Name.Lexeme, value)
 	return nil, nil
+}
+
+func (i *Interpreter) VisitAssignExpr(expr ast.Assign) (interface{}, error) {
+	value, err := i.evaluate(expr.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	i.environment.Assign(expr.Name, value)
+	return value, nil
 }

@@ -21,6 +21,7 @@ func main() {
 	// Store output dir from cli
 	outputDir := os.Args[1]
 	defineAST(outputDir, "Expr", []string{
+		"Assign   : Name *token.Token, Value Expr",
 		"Binary   : Left Expr, Operator *token.Token, Right Expr",
 		"Grouping : Expression Expr",
 		"Literal  : Value interface{}",
@@ -29,7 +30,9 @@ func main() {
 	})
 
 	defineAST(outputDir, "Stmt", []string{
+		"Block      : Statements []Stmt",
 		"Expression : Expression Expr",
+		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",
 		"Print      : Expression Expr",
 		"Var        : Name *token.Token, Initializer Expr",
 	})

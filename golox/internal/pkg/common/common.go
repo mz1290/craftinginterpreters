@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/mz1290/golox/internal/pkg/ast"
 	"github.com/mz1290/golox/internal/pkg/token"
 
 	"github.com/mz1290/golox/internal/pkg/errors"
@@ -59,6 +60,11 @@ func IsString(object interface{}) bool {
 
 func IsFloat64(object interface{}) bool {
 	return isType(object, reflect.Float64)
+}
+
+func IsVariableExpression(object interface{}) bool {
+	_, ok := object.(ast.Variable)
+	return ok
 }
 
 func CheckNumberOperand(operator *token.Token, operand interface{}) error {

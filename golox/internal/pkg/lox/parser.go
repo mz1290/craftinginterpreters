@@ -2,6 +2,7 @@ package lox
 
 import (
 	"github.com/mz1290/golox/internal/pkg/ast"
+	"github.com/mz1290/golox/internal/pkg/common"
 	"github.com/mz1290/golox/internal/pkg/token"
 )
 
@@ -44,11 +45,45 @@ func (p *Parser) Parse() []ast.Stmt {
 }
 
 func (p *Parser) statement() ast.Stmt {
+	if p.match(token.IF) {
+		return p.ifStatement()
+	}
+
 	if p.match(token.PRINT) {
 		return p.printStatement()
 	}
 
+	if p.match(token.LEFT_BRACE) {
+		return ast.Block{Statements: p.block()}
+	}
+
 	return p.expressionStatement()
+}
+
+func (p *Parser) ifStatement() ast.Stmt {
+	_, ok := p.consume(token.LEFT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected '(' after 'if'")
+	}
+
+	condition := p.expression()
+
+	_, ok = p.consume(token.RIGHT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ')' after if condition")
+	}
+
+	thenBranch := p.statement()
+	var elseBranch ast.Stmt
+	if p.match(token.ELSE) {
+		elseBranch = p.statement()
+	}
+
+	return ast.If{
+		Condition:  condition,
+		ThenBranch: thenBranch,
+		ElseBranch: elseBranch,
+	}
 }
 
 func (p *Parser) printStatement() ast.Stmt {
@@ -92,8 +127,41 @@ func (p *Parser) expressionStatement() ast.Stmt {
 	return ast.Expression{Expression: expr}
 }
 
+func (p *Parser) block() []ast.Stmt {
+	var statements []ast.Stmt
+
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		statements = append(statements, p.declaration())
+	}
+
+	_, ok := p.consume(token.RIGHT_BRACE)
+	if !ok {
+		p.NewParserError(p.peek(), "expected '}' after block")
+	}
+
+	return statements
+}
+
+func (p *Parser) assignment() ast.Expr {
+	expr := p.equality()
+
+	if p.match(token.EQUAL) {
+		equals := p.previous()
+		value := p.assignment()
+
+		if common.IsVariableExpression(expr) {
+			name := expr.(ast.Variable).Name
+			return ast.Assign{Name: name, Value: value}
+		}
+
+		p.NewParserError(equals, "invalid assignment target")
+	}
+
+	return expr
+}
+
 func (p *Parser) expression() ast.Expr {
-	return p.equality()
+	return p.assignment()
 }
 
 func (p *Parser) declaration() ast.Stmt {

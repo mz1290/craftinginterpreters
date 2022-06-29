@@ -80,10 +80,6 @@ func (l *Lox) run(source string) {
 		return
 	}
 
-	// Print ast
-	//p := ast.ASTPrinter{}
-	//fmt.Println(p.Print(expression))
-
 	// Execute/evaluate expression
 	l.Interpreter.Interpret(statements)
 

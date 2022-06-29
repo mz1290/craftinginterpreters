@@ -56,6 +56,14 @@ func (p ASTPrinter) VisitVariableExpr(expr Variable) (interface{}, error) {
 	return expr.Name.Lexeme, nil
 }
 
+func (p ASTPrinter) VisitAssignExpr(expr Assign) (interface{}, error) {
+	if expr.Name == nil {
+		return "nil", nil
+	}
+
+	return p.parenthesize("assign", expr.Value)
+}
+
 func (p ASTPrinter) parenthesize(name string, exprs ...Expr) (string, error) {
 	w := &strings.Builder{}
 
