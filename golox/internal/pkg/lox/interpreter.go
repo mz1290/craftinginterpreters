@@ -35,6 +35,25 @@ func (i *Interpreter) VisitLiteralExpr(expr ast.Literal) (interface{}, error) {
 	return expr.Value, nil
 }
 
+func (i *Interpreter) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
+	left, err := i.evaluate(expr.Left)
+	if err != nil {
+		return nil, err
+	}
+
+	if expr.Operator.Type == token.OR {
+		if common.IsTruthy(left) {
+			return left, nil
+		} else {
+			if !common.IsTruthy(left) {
+				return left, nil
+			}
+		}
+	}
+
+	return i.evaluate(expr.Right)
+}
+
 func (i *Interpreter) VisitGroupingExpr(expr ast.Grouping) (interface{}, error) {
 	return i.evaluate(expr.Expression)
 }
