@@ -35,6 +35,10 @@ func (p *Parser) Parse() []ast.Stmt {
 }
 
 func (p *Parser) statement() ast.Stmt {
+	if p.match(token.FOR) {
+		return p.forStatement()
+	}
+
 	if p.match(token.IF) {
 		return p.ifStatement()
 	}
@@ -43,11 +47,71 @@ func (p *Parser) statement() ast.Stmt {
 		return p.printStatement()
 	}
 
+	if p.match(token.WHILE) {
+		return p.whileStatement()
+	}
+
 	if p.match(token.LEFT_BRACE) {
 		return ast.Block{Statements: p.block()}
 	}
 
 	return p.expressionStatement()
+}
+
+func (p *Parser) forStatement() ast.Stmt {
+	_, ok := p.consume(token.LEFT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected '(' after 'for'")
+	}
+
+	var initializer ast.Stmt
+	if p.match(token.SEMICOLON) {
+		initializer = nil
+	} else if p.match(token.VAR) {
+		initializer = p.varDeclaration()
+	} else {
+		initializer = p.expressionStatement()
+	}
+
+	var condition ast.Expr
+	if !p.check(token.SEMICOLON) {
+		condition = p.expression()
+	}
+	_, ok = p.consume(token.SEMICOLON)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ';' after loop condition")
+	}
+
+	var increment ast.Expr
+	if !p.check(token.RIGHT_PAREN) {
+		increment = p.expression()
+	}
+	_, ok = p.consume(token.RIGHT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ')' after for clause")
+	}
+
+	body := p.statement()
+
+	// desugaring for-loop
+	if increment != nil {
+		body = ast.Block{
+			Statements: []ast.Stmt{body, ast.Expression{Expression: increment}},
+		}
+	}
+
+	if condition == nil {
+		condition = ast.Literal{Value: true}
+	}
+	body = ast.While{Condition: condition, Body: body}
+
+	if initializer != nil {
+		body = ast.Block{
+			Statements: []ast.Stmt{initializer, body},
+		}
+	}
+
+	return body
 }
 
 func (p *Parser) ifStatement() ast.Stmt {
@@ -104,6 +168,24 @@ func (p *Parser) varDeclaration() ast.Stmt {
 	}
 
 	return ast.Var{Name: name, Initializer: initializer}
+}
+
+func (p *Parser) whileStatement() ast.Stmt {
+	_, ok := p.consume(token.LEFT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected '(' after 'while'")
+	}
+
+	condition := p.expression()
+
+	_, ok = p.consume(token.RIGHT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ')' after condition")
+	}
+
+	body := p.statement()
+
+	return ast.While{Condition: condition, Body: body}
 }
 
 func (p *Parser) expressionStatement() ast.Stmt {

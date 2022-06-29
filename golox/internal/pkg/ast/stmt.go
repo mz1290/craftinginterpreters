@@ -15,6 +15,7 @@ type StmtVisitor interface {
 	VisitIfStmt(stmt If) (interface{}, error)
 	VisitPrintStmt(stmt Print) (interface{}, error)
 	VisitVarStmt(stmt Var) (interface{}, error)
+	VisitWhileStmt(stmt While) (interface{}, error)
 }
 
 type StmtAcceptor interface {
@@ -62,5 +63,14 @@ type Var struct {
 
 func (x Var) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitVarStmt(x)
+}
+
+type While struct {
+	Condition Expr
+	Body Stmt
+}
+
+func (x While) Accept(v StmtVisitor) (interface{}, error) {
+	return v.VisitWhileStmt(x)
 }
 

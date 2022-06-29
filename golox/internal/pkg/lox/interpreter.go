@@ -227,6 +227,23 @@ func (i *Interpreter) VisitVarStmt(stmt ast.Var) (interface{}, error) {
 	return nil, nil
 }
 
+func (i *Interpreter) VisitWhileStmt(stmt ast.While) (interface{}, error) {
+	for {
+		condition, err := i.evaluate(stmt.Condition)
+		if err != nil {
+			return nil, err
+		}
+
+		if common.IsTruthy(condition) {
+			i.execute(stmt.Body)
+		} else {
+			break
+		}
+	}
+
+	return nil, nil
+}
+
 func (i *Interpreter) VisitAssignExpr(expr ast.Assign) (interface{}, error) {
 	value, err := i.evaluate(expr.Value)
 	if err != nil {
