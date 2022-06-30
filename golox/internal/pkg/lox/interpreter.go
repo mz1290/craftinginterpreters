@@ -11,14 +11,20 @@ import (
 
 type Interpreter struct {
 	runtime     *Lox
+	globals     *Environment
 	environment *Environment
 }
 
 func NewInterpreter(runtime *Lox) *Interpreter {
-	return &Interpreter{
+
+	i := &Interpreter{
 		runtime:     runtime,
+		globals:     NewEnvironment(runtime),
 		environment: NewEnvironment(runtime),
 	}
+
+	i.globals.Define("clock", nativeFunctionClock{})
+	return i
 }
 
 func (i *Interpreter) Interpret(statements []ast.Stmt) {
@@ -77,7 +83,7 @@ func (i *Interpreter) VisitUnaryExpr(expr ast.Unary) (interface{}, error) {
 	}
 
 	// Unreachable
-	return nil, errors.RuntimeError.New(nil, "unreachable")
+	return nil, errors.RuntimeError.New(expr.Operator, "unreachable")
 }
 
 func (i *Interpreter) VisitVariableExpr(expr ast.Variable) (interface{}, error) {
@@ -183,11 +189,46 @@ func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
 	}
 
 	// Unreachable
-	return nil, errors.RuntimeError.New(nil, "unreachable")
+	return nil, errors.RuntimeError.New(expr.Operator, "unreachable")
+}
+
+func (i *Interpreter) VisitCallExpr(expr ast.Call) (interface{}, error) {
+	callee, err := i.evaluate(expr.Callee)
+	if err != nil {
+		return nil, err
+	}
+
+	var arguments []interface{}
+	for _, arg := range expr.Arguments {
+		argRes, err := i.evaluate(arg)
+		if err != nil {
+			return nil, err
+		}
+		arguments = append(arguments, argRes)
+	}
+
+	// Confirm the object is indeed callable
+	if !IsCallable(callee) {
+		return nil, errors.RuntimeError.New(expr.Paren, "can only call functions "+
+			"and classes")
+	}
+
+	function := callee.(Callable)
+	if len(arguments) != function.Arity() {
+		return nil, errors.RuntimeError.New(expr.Paren, fmt.Sprintf("expected %d "+
+			"arguments but got %d", function.Arity(), len(arguments)))
+	}
+	return function.Call(i, arguments)
 }
 
 func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, error) {
 	return i.evaluate(stmt.Expression)
+}
+
+func (i *Interpreter) VisitFunctionStmt(stmt ast.Function) (interface{}, error) {
+	function := NewFunction(stmt)
+	i.environment.Define(stmt.Name.Lexeme, function)
+	return nil, nil
 }
 
 func (i *Interpreter) VisitIfStmt(stmt ast.If) (interface{}, error) {

@@ -5,9 +5,8 @@ import (
 	"reflect"
 
 	"github.com/mz1290/golox/internal/pkg/ast"
-	"github.com/mz1290/golox/internal/pkg/token"
-
 	"github.com/mz1290/golox/internal/pkg/errors"
+	"github.com/mz1290/golox/internal/pkg/token"
 )
 
 func IsDigit(c byte) bool {

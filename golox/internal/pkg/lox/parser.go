@@ -1,10 +1,14 @@
 package lox
 
 import (
+	"fmt"
+
 	"github.com/mz1290/golox/internal/pkg/ast"
 	"github.com/mz1290/golox/internal/pkg/common"
 	"github.com/mz1290/golox/internal/pkg/token"
 )
+
+const max_args = 255
 
 type ParserError error
 
@@ -199,6 +203,53 @@ func (p *Parser) expressionStatement() ast.Stmt {
 	return ast.Expression{Expression: expr}
 }
 
+func (p *Parser) function(kind string) ast.Stmt {
+	name, ok := p.consume(token.IDENTIFIER)
+	if !ok {
+		p.NewParserError(p.peek(), fmt.Sprintf("expected %q name", kind))
+	}
+
+	_, ok = p.consume(token.LEFT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), fmt.Sprintf("expected '(' after %q name",
+			kind))
+	}
+
+	var parameters []*token.Token
+	if !p.check(token.RIGHT_PAREN) {
+		for {
+			if len(parameters) >= max_args {
+				p.NewParserError(p.peek(), "can't have more than 255 "+
+					"parameters")
+			}
+
+			id, ok := p.consume(token.IDENTIFIER)
+			if !ok {
+				p.NewParserError(p.peek(), "expected parameter name")
+			}
+			parameters = append(parameters, id)
+
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+
+	_, ok = p.consume(token.RIGHT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ')' after parameters")
+	}
+
+	_, ok = p.consume(token.LEFT_BRACE)
+	if !ok {
+		p.NewParserError(p.peek(), fmt.Sprintf("expected '{' before %q body",
+			kind))
+	}
+
+	body := p.block()
+
+	return ast.Function{Name: name, Params: parameters, Body: body}
+}
 func (p *Parser) block() []ast.Stmt {
 	var statements []ast.Stmt
 
@@ -261,6 +312,10 @@ func (p *Parser) expression() ast.Expr {
 }
 
 func (p *Parser) declaration() ast.Stmt {
+	if p.match(token.FUN) {
+		return p.function("function")
+	}
+
 	if p.match(token.VAR) {
 		return p.varDeclaration()
 	}
@@ -331,7 +386,45 @@ func (p *Parser) unary() ast.Expr {
 		return ast.Unary{Operator: operator, Right: right}
 	}
 
-	return p.primary()
+	return p.call()
+}
+
+func (p *Parser) finishCall(callee ast.Expr) ast.Expr {
+	arguments := make([]ast.Expr, 0, 255)
+
+	if !p.check(token.RIGHT_PAREN) {
+		for {
+			if len(arguments) >= max_args {
+				p.NewParserError(p.peek(), "can't have more than 255 arguments")
+			}
+			arguments = append(arguments, p.expression())
+
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+
+	paren, ok := p.consume(token.RIGHT_PAREN)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ')' after arguments")
+	}
+
+	return ast.Call{Callee: callee, Paren: paren, Arguments: arguments}
+}
+
+func (p *Parser) call() ast.Expr {
+	expr := p.primary()
+
+	for {
+		if p.match(token.LEFT_PAREN) {
+			expr = p.finishCall(expr)
+		} else {
+			break
+		}
+	}
+
+	return expr
 }
 
 func (p *Parser) primary() ast.Expr {
