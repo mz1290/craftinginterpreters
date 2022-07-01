@@ -61,3 +61,21 @@ func (e *Environment) Assign(name *token.Token, value interface{}) {
 func (e *Environment) Define(name string, value interface{}) {
 	e.Values[name] = value
 }
+
+func (e *Environment) GetAt(distance int, name string) interface{} {
+	return e.ancestor(distance).Values[name]
+}
+
+func (e *Environment) AssignAt(distance int, name *token.Token, value interface{}) {
+	e.ancestor(distance).Values[name.Lexeme] = value
+}
+
+func (e *Environment) ancestor(distance int) *Environment {
+	environment := e
+
+	for i := 0; i < distance; i++ {
+		environment = environment.Enclosing
+	}
+
+	return environment
+}

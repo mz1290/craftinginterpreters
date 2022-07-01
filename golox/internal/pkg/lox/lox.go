@@ -80,6 +80,15 @@ func (l *Lox) run(source string) {
 		return
 	}
 
+	// Run the resolver to find variable bindings
+	resolver := NewResolver(l, l.Interpreter)
+	resolver.Resolve(statements)
+
+	// Stop if there was a semantic error
+	if l.HadError {
+		return
+	}
+
 	// Execute/evaluate expression
 	l.Interpreter.Interpret(statements)
 

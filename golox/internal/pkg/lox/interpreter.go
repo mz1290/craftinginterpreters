@@ -13,6 +13,7 @@ type Interpreter struct {
 	runtime     *Lox
 	globals     *Environment
 	environment *Environment
+	locals      map[ast.Expr]int
 }
 
 func NewInterpreter(runtime *Lox) *Interpreter {
@@ -20,6 +21,7 @@ func NewInterpreter(runtime *Lox) *Interpreter {
 	i := &Interpreter{
 		runtime: runtime,
 		globals: NewEnvironment(runtime),
+		locals:  make(map[ast.Expr]int),
 	}
 	i.environment = i.globals
 
@@ -87,7 +89,15 @@ func (i *Interpreter) VisitUnaryExpr(expr ast.Unary) (interface{}, error) {
 }
 
 func (i *Interpreter) VisitVariableExpr(expr ast.Variable) (interface{}, error) {
-	return i.environment.Get(expr.Name), nil
+	return i.lookUpVariable(expr.Name, expr), nil
+}
+
+func (i *Interpreter) lookUpVariable(name *token.Token, expr ast.Expr) interface{} {
+	if distance, ok := i.locals[expr]; ok {
+		return i.environment.GetAt(distance, name.Lexeme)
+	}
+
+	return i.globals.Get(name)
 }
 
 // evaluate sends the expression back into the interpreter's visitor implementation
@@ -97,6 +107,10 @@ func (i *Interpreter) evaluate(expr ast.Expr) (interface{}, error) {
 
 func (i *Interpreter) execute(stmt ast.Stmt) (interface{}, error) {
 	return stmt.Accept(i)
+}
+
+func (i *Interpreter) Resolve(expr ast.Expr, depth int) {
+	i.locals[expr] = depth
 }
 
 func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environment) (interface{}, error) {
@@ -312,6 +326,11 @@ func (i *Interpreter) VisitAssignExpr(expr ast.Assign) (interface{}, error) {
 		return nil, err
 	}
 
-	i.environment.Assign(expr.Name, value)
+	if distance, ok := i.locals[expr]; ok {
+		i.environment.AssignAt(distance, expr.Name, value)
+	} else {
+		i.environment.Assign(expr.Name, value)
+	}
+
 	return value, nil
 }
