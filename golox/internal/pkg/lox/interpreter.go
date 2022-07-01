@@ -232,7 +232,7 @@ func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, err
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt ast.Function) (interface{}, error) {
-	function := NewFunction(stmt)
+	function := NewFunction(stmt, i.environment)
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil, nil
 }

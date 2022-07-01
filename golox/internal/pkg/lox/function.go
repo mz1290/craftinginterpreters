@@ -11,17 +11,19 @@ import (
 // https://stackoverflow.com/questions/36527261/interface-conversion-panic-when-method-is-not-actually-missing
 
 type Function struct {
+	Closure     *Environment
 	Declaration ast.Function
 }
 
-func NewFunction(declaration ast.Function) *Function {
+func NewFunction(declaration ast.Function, closure *Environment) *Function {
 	return &Function{
+		Closure:     closure,
 		Declaration: declaration,
 	}
 }
 
 func (f *Function) Call(interpreter *Interpreter, arguments []interface{}) (interface{}, error) {
-	environment := NewLocalEnvironment(interpreter.globals)
+	environment := NewLocalEnvironment(f.Closure)
 
 	for i := 0; i < len(f.Declaration.Params); i++ {
 		environment.Define(f.Declaration.Params[i].Lexeme, arguments[i])
