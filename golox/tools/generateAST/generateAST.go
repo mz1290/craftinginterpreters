@@ -37,6 +37,7 @@ func main() {
 		"Function   : Name *token.Token, Params []*token.Token, Body []Stmt",
 		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",
 		"Print      : Expression Expr",
+		"Return     : Keyword *token.Token, Value Expr",
 		"Var        : Name *token.Token, Initializer Expr",
 		"While      : Condition Expr, Body Stmt",
 	})

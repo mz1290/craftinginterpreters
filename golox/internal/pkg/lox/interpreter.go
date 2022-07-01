@@ -18,10 +18,10 @@ type Interpreter struct {
 func NewInterpreter(runtime *Lox) *Interpreter {
 
 	i := &Interpreter{
-		runtime:     runtime,
-		globals:     NewEnvironment(runtime),
-		environment: NewEnvironment(runtime),
+		runtime: runtime,
+		globals: NewEnvironment(runtime),
 	}
+	i.environment = i.globals
 
 	i.globals.Define("clock", nativeFunctionClock{})
 	return i
@@ -99,20 +99,26 @@ func (i *Interpreter) execute(stmt ast.Stmt) (interface{}, error) {
 	return stmt.Accept(i)
 }
 
-func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environment) {
+func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environment) (interface{}, error) {
+	var val interface{}
 	previous := i.environment
+	defer func() { i.environment = previous }()
 
 	i.environment = environment
 	for _, stmt := range statements {
-		i.execute(stmt)
+		var err error
+
+		val, err = i.execute(stmt)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	i.environment = previous
+	return val, nil
 }
 
 func (i *Interpreter) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
-	i.executeBlock(stmt.Statements, NewLocalEnvironment(i.environment))
-	return nil, nil
+	return i.executeBlock(stmt.Statements, NewLocalEnvironment(i.environment))
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
@@ -235,9 +241,9 @@ func (i *Interpreter) VisitIfStmt(stmt ast.If) (interface{}, error) {
 	condition, _ := i.evaluate(stmt.Condition)
 
 	if common.IsTruthy(condition) {
-		i.execute(stmt.ThenBranch)
+		return i.execute(stmt.ThenBranch)
 	} else if stmt.ElseBranch != nil {
-		i.execute(stmt.ElseBranch)
+		return i.execute(stmt.ElseBranch)
 	}
 
 	return nil, nil
@@ -251,6 +257,21 @@ func (i *Interpreter) VisitPrintStmt(stmt ast.Print) (interface{}, error) {
 
 	fmt.Println(common.Stringfy(value))
 	return nil, nil
+}
+
+func (i *Interpreter) VisitReturnStmt(stmt ast.Return) (interface{}, error) {
+	var value interface{}
+
+	if stmt.Value != nil {
+		var err error
+
+		value, err = i.evaluate(stmt.Value)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, NewReturn(value)
 }
 
 func (i *Interpreter) VisitVarStmt(stmt ast.Var) (interface{}, error) {

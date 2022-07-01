@@ -51,6 +51,10 @@ func (p *Parser) statement() ast.Stmt {
 		return p.printStatement()
 	}
 
+	if p.match(token.RETURN) {
+		return p.returnStatement()
+	}
+
 	if p.match(token.WHILE) {
 		return p.whileStatement()
 	}
@@ -155,6 +159,22 @@ func (p *Parser) printStatement() ast.Stmt {
 	return ast.Print{Expression: value}
 }
 
+func (p *Parser) returnStatement() ast.Stmt {
+	keyword := p.previous()
+
+	var value ast.Expr
+	if !p.check(token.SEMICOLON) {
+		value = p.expression()
+	}
+
+	_, ok := p.consume(token.SEMICOLON)
+	if !ok {
+		p.NewParserError(p.peek(), "expected ';' after return value")
+	}
+
+	return ast.Return{Keyword: keyword, Value: value}
+}
+
 func (p *Parser) varDeclaration() ast.Stmt {
 	name, ok := p.consume(token.IDENTIFIER)
 	if !ok {
@@ -166,7 +186,7 @@ func (p *Parser) varDeclaration() ast.Stmt {
 		initializer = p.expression()
 	}
 
-	p.consume(token.SEMICOLON)
+	_, ok = p.consume(token.SEMICOLON)
 	if !ok {
 		p.NewParserError(p.peek(), "expected ';' after variable declaration")
 	}

@@ -27,7 +27,12 @@ func (f *Function) Call(interpreter *Interpreter, arguments []interface{}) (inte
 		environment.Define(f.Declaration.Params[i].Lexeme, arguments[i])
 	}
 
-	interpreter.executeBlock(f.Declaration.Body, environment)
+	_, err := interpreter.executeBlock(f.Declaration.Body, environment)
+	if err != nil {
+		if IsReturnable(err) {
+			return err.(*Return).Value, nil
+		}
+	}
 
 	return nil, nil
 }
