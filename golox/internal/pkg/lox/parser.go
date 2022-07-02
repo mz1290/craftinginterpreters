@@ -295,6 +295,13 @@ func (p *Parser) assignment() ast.Expr {
 		if common.IsVariableExpression(expr) {
 			name := expr.(ast.Variable).Name
 			return ast.Assign{Name: name, Value: value}
+		} else if common.IsGet(expr) {
+			// Everything up to this point was "get" for an Instance
+			get := expr.(ast.Get)
+
+			// This last object MUST be a "set" if we are assigning so we
+			// transform using the object properties from a "get" to a "set"
+			return ast.Set{Object: get.Object, Name: get.Name, Value: value}
 		}
 
 		p.NewParserError(equals, "invalid assignment target")
@@ -469,6 +476,13 @@ func (p *Parser) call() ast.Expr {
 	for {
 		if p.match(token.LEFT_PAREN) {
 			expr = p.finishCall(expr)
+		} else if p.match(token.DOT) {
+			name, ok := p.consume(token.IDENTIFIER)
+			if !ok {
+				p.NewParserError(p.peek(), "expected property name after '.'")
+			}
+
+			expr = ast.Get{Object: expr, Name: name}
 		} else {
 			break
 		}
@@ -492,6 +506,10 @@ func (p *Parser) primary() ast.Expr {
 
 	if p.match(token.NUMBER, token.STRING) {
 		return ast.Literal{Value: p.previous().Literal}
+	}
+
+	if p.match(token.THIS) {
+		return ast.This{Keyword: p.previous()}
 	}
 
 	if p.match(token.IDENTIFIER) {

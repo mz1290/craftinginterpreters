@@ -11,6 +11,14 @@ type FunctionType byte
 const (
 	FT_NONE FunctionType = iota
 	FT_FUNCTION
+	FT_METHOD
+)
+
+type ClassType byte
+
+const (
+	CT_NONE ClassType = iota
+	CT_CLASS
 )
 
 // The resolver drives our semantic analysis to figure out variable bindings.
@@ -37,6 +45,7 @@ type Resolver struct {
 	runtime         *Lox
 	interpreter     *Interpreter
 	currentFunction FunctionType
+	currentClass    ClassType
 
 	// scopes stack is only used for local block scopes. Global variables are
 	// not tracked by the Resolver. If a variable cannot be fonud in scopes,
@@ -51,6 +60,7 @@ func NewResolver(l *Lox, i *Interpreter) *Resolver {
 		runtime:         l,
 		interpreter:     i,
 		currentFunction: FT_NONE,
+		currentClass:    CT_NONE,
 		scopes:          common.NewStack(),
 	}
 }
@@ -133,7 +143,7 @@ func (r *Resolver) define(name *token.Token) {
 
 func (r *Resolver) resolveLocal(expr ast.Expr, name *token.Token) {
 	// Iterate linked list from back-to-front (top of stack is last)
-	for n, distance := r.scopes.Top(), r.scopes.Len()-1; distance >= 0; n, distance = n.Next(), distance-1 {
+	for n, distance := r.scopes.Top(), 0; distance < r.scopes.Len(); n, distance = n.Next(), distance+1 {
 		// Cast element value as Scope
 		scope := n.Value().(Scope)
 
@@ -158,8 +168,30 @@ func (r *Resolver) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
 }
 
 func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
+	enclosingClass := r.currentClass
+	r.currentClass = CT_CLASS
+
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
+
+	// Begin a new scope for defning "this"
+	r.beginScope()
+
+	// Get the scope from stack and add "this"
+	scope := r.scopes.Peek().(Scope)
+	scope["this"] = true
+
+	for _, method := range stmt.Methods {
+		declaration := FT_METHOD
+		r.resolveFunction(method, declaration)
+	}
+
+	// Discard "this" scope
+	r.endScope()
+
+	// Rever class type back to previous state
+	r.currentClass = enclosingClass
+
 	return nil, nil
 }
 
@@ -273,6 +305,11 @@ func (r *Resolver) VisitCallExpr(expr ast.Call) (interface{}, error) {
 	return nil, nil
 }
 
+func (r *Resolver) VisitGetExpr(expr ast.Get) (interface{}, error) {
+	r.resolveExpression(expr.Object)
+	return nil, nil
+}
+
 func (r *Resolver) VisitGroupingExpr(expr ast.Grouping) (interface{}, error) {
 	r.resolveExpression(expr.Expression)
 	return nil, nil
@@ -285,6 +322,22 @@ func (r *Resolver) VisitLiteralExpr(expr ast.Literal) (interface{}, error) {
 func (r *Resolver) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
 	r.resolveExpression(expr.Left)
 	r.resolveExpression(expr.Right)
+	return nil, nil
+}
+
+func (r *Resolver) VisitSetExpr(expr ast.Set) (interface{}, error) {
+	r.resolveExpression(expr.Value)
+	r.resolveExpression(expr.Object)
+	return nil, nil
+}
+
+func (r *Resolver) VisitThisExpr(expr ast.This) (interface{}, error) {
+	if r.currentClass == CT_NONE {
+		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use 'this' outside "+
+			"of a class")
+	}
+
+	r.resolveLocal(expr, expr.Keyword)
 	return nil, nil
 }
 

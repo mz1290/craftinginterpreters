@@ -62,6 +62,37 @@ func (i *Interpreter) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
 	return i.evaluate(expr.Right)
 }
 
+func (i *Interpreter) VisitSetExpr(expr ast.Set) (interface{}, error) {
+	// Evaluate object whose property is being set
+	object, err := i.evaluate(expr.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	// If evaluated object is no an Instance, invalid
+	if !IsInstance(object) {
+		return nil, errors.RuntimeError.New(expr.Name, "only instances have "+
+			"fields")
+	}
+
+	// Evaluate the value being set
+	value, err := i.evaluate(expr.Value)
+	if err != nil {
+		return nil, errors.RuntimeError.New(expr.Name,
+			fmt.Sprintf("invalid assignment on %s instance", object.(*Instance)))
+	}
+
+	// Store evaluated value in instance
+	object.(*Instance).Set(expr.Name, value)
+
+	// This is a setter so don't need to return any value
+	return nil, nil
+}
+
+func (i *Interpreter) VisitThisExpr(expr ast.This) (interface{}, error) {
+	return i.lookUpVariable(expr.Keyword, expr), nil
+}
+
 func (i *Interpreter) VisitGroupingExpr(expr ast.Grouping) (interface{}, error) {
 	return i.evaluate(expr.Expression)
 }
@@ -142,8 +173,15 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	// Declare class name in current env
 	i.environment.Define(stmt.Name.Lexeme, nil)
 
+	// Convert each class method into a runtime represenation (Function)
+	methods := make(map[string]*Function)
+	for _, method := range stmt.Methods {
+		function := NewFunction(method, i.environment)
+		methods[method.Name.Lexeme] = function
+	}
+
 	// Convert the class *syntax node* into a runtime representation of Class
-	klass := NewClass(stmt.Name.Lexeme)
+	klass := NewClass(i.runtime, stmt.Name.Lexeme, methods)
 
 	// Store the runtime oobject with previously declared env variable
 	i.environment.Assign(stmt.Name, klass)
@@ -255,6 +293,20 @@ func (i *Interpreter) VisitCallExpr(expr ast.Call) (interface{}, error) {
 			"arguments but got %d", function.Arity(), len(arguments)))
 	}
 	return function.Call(i, arguments)
+}
+
+func (i *Interpreter) VisitGetExpr(expr ast.Get) (interface{}, error) {
+	object, err := i.evaluate(expr.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	if IsInstance(object) {
+		return object.(*Instance).Get(expr.Name), nil
+	}
+
+	return nil, errors.RuntimeError.New(expr.Name, "only instances have "+
+		"properties")
 }
 
 func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, error) {

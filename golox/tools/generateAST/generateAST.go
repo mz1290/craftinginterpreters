@@ -24,9 +24,12 @@ func main() {
 		"Assign   : Name *token.Token, Value Expr",
 		"Binary   : Left Expr, Operator *token.Token, Right Expr",
 		"Call     : Callee Expr , Paren *token.Token, Arguments []Expr",
+		"Get      : Object Expr, Name *token.Token",
 		"Grouping : Expression Expr",
 		"Literal  : Value interface{}",
 		"Logical  : Left Expr, Operator *token.Token, Right Expr",
+		"Set      : Object Expr, Name *token.Token, Value Expr",
+		"This     : Keyword *token.Token",
 		"Unary    : Operator *token.Token, Right Expr",
 		"Variable : Name *token.Token",
 	})

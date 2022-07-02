@@ -22,6 +22,18 @@ func NewFunction(declaration ast.Function, closure *Environment) *Function {
 	}
 }
 
+func (f *Function) Bind(instance *Instance) *Function {
+	// Add new environment within method's original closure
+	environment := NewLocalEnvironment(f.Closure)
+
+	// Declare "this" in new env and bind to the instance that this method is
+	// being accessed from.
+	environment.Define("this", instance)
+
+	// Return function that contains instance is bound as "this"
+	return NewFunction(f.Declaration, environment)
+}
+
 func (f *Function) Call(interpreter *Interpreter, arguments []interface{}) (interface{}, error) {
 	environment := NewLocalEnvironment(f.Closure)
 

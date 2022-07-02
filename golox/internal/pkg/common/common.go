@@ -66,6 +66,11 @@ func IsVariableExpression(object interface{}) bool {
 	return ok
 }
 
+func IsGet(object interface{}) bool {
+	_, ok := object.(ast.Get)
+	return ok
+}
+
 func CheckNumberOperand(operator *token.Token, operand interface{}) error {
 	if IsFloat64(operand) {
 		return nil
