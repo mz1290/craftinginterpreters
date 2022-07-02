@@ -157,6 +157,12 @@ func (r *Resolver) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
 	return nil, nil
 }
 
+func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
+	r.declare(stmt.Name)
+	r.define(stmt.Name)
+	return nil, nil
+}
+
 func (r *Resolver) VisitFunctionStmt(stmt ast.Function) (interface{}, error) {
 	// Declare and define the function name in current scope
 	r.declare(stmt.Name)

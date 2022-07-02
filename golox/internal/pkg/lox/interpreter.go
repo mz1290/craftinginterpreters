@@ -135,6 +135,22 @@ func (i *Interpreter) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
 	return i.executeBlock(stmt.Statements, NewLocalEnvironment(i.environment))
 }
 
+func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
+	// This two-stage variable binding process allows references to the class
+	// inside its own methods.
+
+	// Declare class name in current env
+	i.environment.Define(stmt.Name.Lexeme, nil)
+
+	// Convert the class *syntax node* into a runtime representation of Class
+	klass := NewClass(stmt.Name.Lexeme)
+
+	// Store the runtime oobject with previously declared env variable
+	i.environment.Assign(stmt.Name, klass)
+
+	return nil, nil
+}
+
 func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {

@@ -332,6 +332,10 @@ func (p *Parser) expression() ast.Expr {
 }
 
 func (p *Parser) declaration() ast.Stmt {
+	if p.match(token.CLASS) {
+		return p.classDeclaration()
+	}
+
 	if p.match(token.FUN) {
 		return p.function("function")
 	}
@@ -348,6 +352,32 @@ func (p *Parser) declaration() ast.Stmt {
 	}
 
 	return res
+}
+
+func (p *Parser) classDeclaration() ast.Stmt {
+	// Consume and save the class identifier
+	name, ok := p.consume(token.IDENTIFIER)
+	if !ok {
+		p.NewParserError(p.peek(), "expected class name")
+	}
+
+	// Consume the left bracket
+	_, ok = p.consume(token.LEFT_BRACE)
+	if !ok {
+		p.NewParserError(p.peek(), "expected '}' after class body")
+	}
+
+	var methods []ast.Function
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		methods = append(methods, p.function("method").(ast.Function))
+	}
+
+	_, ok = p.consume(token.RIGHT_BRACE)
+	if !ok {
+		p.NewParserError(p.peek(), "expected '}' after class body")
+	}
+
+	return ast.Class{Name: name, Methods: methods}
 }
 
 func (p *Parser) equality() ast.Expr {

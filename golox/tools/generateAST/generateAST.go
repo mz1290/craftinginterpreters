@@ -33,6 +33,7 @@ func main() {
 
 	defineAST(outputDir, "Stmt", []string{
 		"Block      : Statements []Stmt",
+		"Class      : Name *token.Token, Methods []Function",
 		"Expression : Expression Expr",
 		"Function   : Name *token.Token, Params []*token.Token, Body []Stmt",
 		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",
