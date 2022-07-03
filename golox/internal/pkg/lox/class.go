@@ -1,18 +1,20 @@
 package lox
 
 type Class struct {
-	runtime *Lox
-	Name    string
+	runtime    *Lox
+	Name       string
+	superclass *Class
 
 	// Class is responsible for storing behavior.
 	Methods map[string]*Function
 }
 
-func NewClass(l *Lox, name string, methods map[string]*Function) *Class {
+func NewClass(l *Lox, name string, superclass *Class, methods map[string]*Function) *Class {
 	return &Class{
-		runtime: l,
-		Name:    name,
-		Methods: methods,
+		runtime:    l,
+		superclass: superclass,
+		Name:       name,
+		Methods:    methods,
 	}
 }
 
@@ -46,4 +48,9 @@ func (c *Class) Arity() int {
 	}
 
 	return initializer.Arity()
+}
+
+func IsClass(object interface{}) bool {
+	_, ok := object.(*Class)
+	return ok
 }

@@ -170,6 +170,22 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	// This two-stage variable binding process allows references to the class
 	// inside its own methods.
 
+	var superclass interface{}
+	if stmt.Superclass != (ast.Variable{}) {
+		var err error
+
+		superclass, err = i.evaluate(stmt.Superclass)
+		if err != nil {
+			return nil, err
+		}
+
+		// Confirm that superclass expression evaluated to a class
+		if !IsClass(superclass) {
+			return nil, errors.RuntimeError.New(stmt.Superclass.Name,
+				"superclass must be a class")
+		}
+	}
+
 	// Declare class name in current env
 	i.environment.Define(stmt.Name.Lexeme, nil)
 
@@ -181,7 +197,11 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	}
 
 	// Convert the class *syntax node* into a runtime representation of Class
-	klass := NewClass(i.runtime, stmt.Name.Lexeme, methods)
+	var sc *Class = nil
+	if superclass != nil {
+		sc = superclass.(*Class)
+	}
+	klass := NewClass(i.runtime, stmt.Name.Lexeme, sc, methods)
 
 	// Store the runtime oobject with previously declared env variable
 	i.environment.Assign(stmt.Name, klass)

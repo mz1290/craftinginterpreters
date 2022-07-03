@@ -368,6 +368,16 @@ func (p *Parser) classDeclaration() ast.Stmt {
 		p.NewParserError(p.peek(), "expected class name")
 	}
 
+	var superclass ast.Variable
+	if p.match(token.LESS) {
+		_, ok := p.consume(token.IDENTIFIER)
+		if !ok {
+			p.NewParserError(p.peek(), "expected superclass name")
+		}
+
+		superclass = ast.Variable{Name: p.previous()}
+	}
+
 	// Consume the left bracket
 	_, ok = p.consume(token.LEFT_BRACE)
 	if !ok {
@@ -384,7 +394,7 @@ func (p *Parser) classDeclaration() ast.Stmt {
 		p.NewParserError(p.peek(), "expected '}' after class body")
 	}
 
-	return ast.Class{Name: name, Methods: methods}
+	return ast.Class{Name: name, Superclass: superclass, Methods: methods}
 }
 
 func (p *Parser) equality() ast.Expr {

@@ -1,0 +1,1 @@
+class Oops < Oops {} // a class can't inherit from itself

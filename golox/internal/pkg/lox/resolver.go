@@ -175,6 +175,18 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
 
+	// Superclass is not pointer to struct, this checks if struct is not empty
+	if stmt.Superclass != (ast.Variable{}) {
+		// Confirm that there is no cycle in the inheritance chain
+		if stmt.Name.Lexeme == stmt.Superclass.Name.Lexeme {
+			r.runtime.ErrorTokenMessage(stmt.Superclass.Name,
+				"a class can't inherit from itself")
+			return nil, nil
+		}
+
+		r.resolveExpression(stmt.Superclass)
+	}
+
 	// Begin a new scope for defning "this"
 	r.beginScope()
 

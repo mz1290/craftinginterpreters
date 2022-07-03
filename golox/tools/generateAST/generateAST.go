@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// Influenced by:
 // https://github.com/nanmu42/bluelox/blob/3e596a1efff6dee6a5f320f8d20fe00e7db9e1f2/cmd/gen-ast-types/gen-ast-types.go
 // https://github.com/n4to4/glox/blob/dd0c6a494d1377b368d8e0c374802233712a72d9/tool/generate.go
 // https://github.com/goropikari/golox/blob/main/tools/generate_ast.go
@@ -36,7 +37,7 @@ func main() {
 
 	defineAST(outputDir, "Stmt", []string{
 		"Block      : Statements []Stmt",
-		"Class      : Name *token.Token, Methods []Function",
+		"Class      : Name *token.Token, Superclass Variable, Methods []Function",
 		"Expression : Expression Expr",
 		"Function   : Name *token.Token, Params []*token.Token, Body []Stmt",
 		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",

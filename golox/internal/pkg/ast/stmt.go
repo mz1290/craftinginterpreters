@@ -35,6 +35,7 @@ func (x Block) Accept(v StmtVisitor) (interface{}, error) {
 
 type Class struct {
 	Name *token.Token
+	Superclass Variable
 	Methods []Function
 }
 
