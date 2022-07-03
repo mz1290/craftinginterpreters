@@ -176,7 +176,7 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	// Convert each class method into a runtime represenation (Function)
 	methods := make(map[string]*Function)
 	for _, method := range stmt.Methods {
-		function := NewFunction(method, i.environment)
+		function := NewFunction(method, i.environment, method.Name.Lexeme == "init")
 		methods[method.Name.Lexeme] = function
 	}
 
@@ -314,7 +314,7 @@ func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, err
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt ast.Function) (interface{}, error) {
-	function := NewFunction(stmt, i.environment)
+	function := NewFunction(stmt, i.environment, false)
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil, nil
 }

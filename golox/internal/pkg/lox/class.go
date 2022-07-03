@@ -29,9 +29,21 @@ func (c *Class) String() string {
 }
 
 func (c *Class) Call(i *Interpreter, arguments []interface{}) (interface{}, error) {
-	return NewInstance(c.runtime, c), nil
+	instance := NewInstance(c.runtime, c)
+
+	initializer := c.FindMethod("init")
+	if initializer != nil {
+		initializer.Bind(instance).Call(i, arguments)
+	}
+
+	return instance, nil
 }
 
 func (c *Class) Arity() int {
-	return 0
+	initializer := c.FindMethod("init")
+	if initializer == nil {
+		return 0
+	}
+
+	return initializer.Arity()
 }

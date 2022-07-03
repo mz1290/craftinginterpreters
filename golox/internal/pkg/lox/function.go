@@ -11,14 +11,16 @@ import (
 // https://stackoverflow.com/questions/36527261/interface-conversion-panic-when-method-is-not-actually-missing
 
 type Function struct {
-	Closure     *Environment
-	Declaration ast.Function
+	Closure       *Environment
+	Declaration   ast.Function
+	isInitializer bool
 }
 
-func NewFunction(declaration ast.Function, closure *Environment) *Function {
+func NewFunction(declaration ast.Function, closure *Environment, isInitializer bool) *Function {
 	return &Function{
-		Closure:     closure,
-		Declaration: declaration,
+		Closure:       closure,
+		Declaration:   declaration,
+		isInitializer: isInitializer,
 	}
 }
 
@@ -31,7 +33,7 @@ func (f *Function) Bind(instance *Instance) *Function {
 	environment.Define("this", instance)
 
 	// Return function that contains instance is bound as "this"
-	return NewFunction(f.Declaration, environment)
+	return NewFunction(f.Declaration, environment, f.isInitializer)
 }
 
 func (f *Function) Call(interpreter *Interpreter, arguments []interface{}) (interface{}, error) {
@@ -44,8 +46,16 @@ func (f *Function) Call(interpreter *Interpreter, arguments []interface{}) (inte
 	_, err := interpreter.executeBlock(f.Declaration.Body, environment)
 	if err != nil {
 		if IsReturnable(err) {
+			if f.isInitializer {
+				return f.Closure.GetAt(0, "this"), nil
+			}
+
 			return err.(*Return).Value, nil
 		}
+	}
+
+	if f.isInitializer {
+		return f.Closure.GetAt(0, "this"), nil
 	}
 
 	return nil, nil

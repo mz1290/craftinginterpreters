@@ -11,6 +11,7 @@ type FunctionType byte
 const (
 	FT_NONE FunctionType = iota
 	FT_FUNCTION
+	FT_INITIALIZER
 	FT_METHOD
 )
 
@@ -183,6 +184,10 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 
 	for _, method := range stmt.Methods {
 		declaration := FT_METHOD
+		if method.Name.Lexeme == "init" {
+			declaration = FT_INITIALIZER
+		}
+
 		r.resolveFunction(method, declaration)
 	}
 
@@ -276,7 +281,12 @@ func (r *Resolver) VisitReturnStmt(stmt ast.Return) (interface{}, error) {
 		return nil, nil
 	}
 
-	if stmt.Value == nil {
+	if stmt.Value != nil {
+		if r.currentFunction == FT_INITIALIZER {
+			r.runtime.ErrorTokenMessage(stmt.Keyword, "can't return a value "+
+				"from an initializer")
+		}
+
 		r.resolveExpression(stmt.Value)
 	}
 
