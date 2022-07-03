@@ -23,6 +23,12 @@ func (c *Class) FindMethod(name string) *Function {
 		return f
 	}
 
+	// If we don't find the method for the specific instance's class, we will
+	// recurse up through the superclass chain and check therea.
+	if c.superclass != nil {
+		return c.superclass.FindMethod(name)
+	}
+
 	return nil
 }
 
