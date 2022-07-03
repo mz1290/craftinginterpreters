@@ -18,6 +18,7 @@ type ExprVisitor interface {
 	VisitLiteralExpr(expr Literal) (interface{}, error)
 	VisitLogicalExpr(expr Logical) (interface{}, error)
 	VisitSetExpr(expr Set) (interface{}, error)
+	VisitSuperExpr(expr Super) (interface{}, error)
 	VisitThisExpr(expr This) (interface{}, error)
 	VisitUnaryExpr(expr Unary) (interface{}, error)
 	VisitVariableExpr(expr Variable) (interface{}, error)
@@ -99,6 +100,15 @@ type Set struct {
 
 func (x Set) Accept(v ExprVisitor) (interface{}, error) {
 	return v.VisitSetExpr(x)
+}
+
+type Super struct {
+	Keyword *token.Token
+	Method *token.Token
+}
+
+func (x Super) Accept(v ExprVisitor) (interface{}, error) {
+	return v.VisitSuperExpr(x)
 }
 
 type This struct {

@@ -20,6 +20,7 @@ type ClassType byte
 const (
 	CT_NONE ClassType = iota
 	CT_CLASS
+	CT_SUBCLASS
 )
 
 // The resolver drives our semantic analysis to figure out variable bindings.
@@ -184,7 +185,16 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 			return nil, nil
 		}
 
+		r.currentClass = CT_SUBCLASS
 		r.resolveExpression(stmt.Superclass)
+	}
+
+	if stmt.Superclass != (ast.Variable{}) {
+		// Begin a new scope for defining super
+		r.beginScope()
+		// Get the scope from stack and add "super"
+		scope := r.scopes.Peek().(Scope)
+		scope["super"] = true
 	}
 
 	// Begin a new scope for defning "this"
@@ -205,6 +215,11 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 
 	// Discard "this" scope
 	r.endScope()
+
+	// If superclass existed, we need to remove the super scope
+	if stmt.Superclass != (ast.Variable{}) {
+		r.endScope()
+	}
 
 	// Rever class type back to previous state
 	r.currentClass = enclosingClass
@@ -350,6 +365,22 @@ func (r *Resolver) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
 func (r *Resolver) VisitSetExpr(expr ast.Set) (interface{}, error) {
 	r.resolveExpression(expr.Value)
 	r.resolveExpression(expr.Object)
+	return nil, nil
+}
+
+func (r *Resolver) VisitSuperExpr(expr ast.Super) (interface{}, error) {
+	if r.currentClass == CT_NONE {
+		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use 'super' outside "+
+			"of a class")
+	} else if r.currentClass != CT_SUBCLASS {
+		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use 'super' in a "+
+			"class with no superclass")
+	}
+
+	// Treat 'super' token as a variable. Resolve and store the number of hops
+	// through the environment chain the interpreter needs to take to find the
+	// environment that contains the superclass.
+	r.resolveLocal(expr, expr.Keyword)
 	return nil, nil
 }
 

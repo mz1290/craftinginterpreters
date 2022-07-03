@@ -89,6 +89,27 @@ func (i *Interpreter) VisitSetExpr(expr ast.Set) (interface{}, error) {
 	return nil, nil
 }
 
+func (i *Interpreter) VisitSuperExpr(expr ast.Super) (interface{}, error) {
+	// Get number of hops to superclass env
+	distance := i.locals[expr]
+
+	// Get the superclass
+	superclass := i.environment.GetAt(distance, "super").(*Class)
+
+	// A hacky way of arriving at the proper "this" for the superclass. The env
+	// where "this" is bound is always +1 from the env that stores "super".
+	object := i.environment.GetAt(distance-1, "this").(*Instance)
+
+	// Look up method
+	method := superclass.FindMethod(expr.Method.Lexeme)
+	if method == nil {
+		return nil, errors.RuntimeError.New(expr.Method,
+			fmt.Sprintf("undefined property %s", expr.Method.Lexeme))
+	}
+
+	return method.Bind(object), nil
+}
+
 func (i *Interpreter) VisitThisExpr(expr ast.This) (interface{}, error) {
 	return i.lookUpVariable(expr.Keyword, expr), nil
 }
@@ -189,6 +210,14 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	// Declare class name in current env
 	i.environment.Define(stmt.Name.Lexeme, nil)
 
+	// If we created a runtime object for superclass, we need to update the
+	// interpreter's current environment with a new one that stores the
+	// superclass.
+	if stmt.Superclass != (ast.Variable{}) {
+		i.environment = NewLocalEnvironment(i.environment)
+		i.environment.Define("super", superclass)
+	}
+
 	// Convert each class method into a runtime represenation (Function)
 	methods := make(map[string]*Function)
 	for _, method := range stmt.Methods {
@@ -202,6 +231,12 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 		sc = superclass.(*Class)
 	}
 	klass := NewClass(i.runtime, stmt.Name.Lexeme, sc, methods)
+
+	// If we updated our superclass environment, we need to revert back to
+	// previous environment.
+	if superclass != nil {
+		i.environment = i.environment.Enclosing
+	}
 
 	// Store the runtime oobject with previously declared env variable
 	i.environment.Assign(stmt.Name, klass)

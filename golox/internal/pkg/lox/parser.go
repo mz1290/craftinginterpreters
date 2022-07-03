@@ -518,6 +518,22 @@ func (p *Parser) primary() ast.Expr {
 		return ast.Literal{Value: p.previous().Literal}
 	}
 
+	if p.match(token.SUPER) {
+		keyword := p.previous()
+
+		_, ok := p.consume(token.DOT)
+		if !ok {
+			p.NewParserError(p.peek(), "expected '.' after 'super'")
+		}
+
+		method, ok := p.consume(token.IDENTIFIER)
+		if !ok {
+			p.NewParserError(p.peek(), "expected superclass method name")
+		}
+
+		return ast.Super{Keyword: keyword, Method: method}
+	}
+
 	if p.match(token.THIS) {
 		return ast.This{Keyword: p.previous()}
 	}
