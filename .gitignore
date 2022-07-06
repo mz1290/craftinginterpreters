@@ -12,3 +12,9 @@
 
 # Ignore vscode dir
 .vscode/
+
+# Ignore object files
+*.o
+
+# Ignore dSYM dirs
+*.dSYM/
