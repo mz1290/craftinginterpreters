@@ -1,11 +1,19 @@
 CC = gcc
 CFLAGS = -g -Wall
 
+all: clox
+
 leak: clox
 	leaks --atExit -- ./clox
 
-clox: main.c memory.o chunk.o debug.o value.o vm.o
-	$(CC) $(CFLAGS) memory.o chunk.o debug.o value.o vm.o main.c -o clox
+clox: main.c memory.o chunk.o debug.o value.o vm.o compiler.o scanner.o
+	$(CC) $(CFLAGS) memory.o chunk.o debug.o value.o vm.o compiler.o scanner.o main.c -o clox
+
+scanner.o: scanner.c
+	$(CC) -c $(CFLAGS) scanner.c -o scanner.o
+
+compiler.o: compiler.c
+	$(CC) -c $(CFLAGS) compiler.c -o compiler.o
 
 vm.o: vm.c
 	$(CC) -c $(CFLAGS) vm.c -o vm.o

@@ -7,6 +7,7 @@
 #include "common.h"
 #include "debug.h"
 #include "value.h"
+#include "compiler.h"
 
 #define STACK_MAX 256
 
@@ -33,7 +34,7 @@ void initVM();
 void freeVM();
 
 // Entrypoint into the VM
-InterpretResult interpret(Chunk*);
+InterpretResult interpret(const char*);
 
 // Stack operations
 void push(Value value);
