@@ -1,34 +1,42 @@
+# source: https://makefiletutorial.com/
 CC = gcc
-CFLAGS = -g -Wall
+TARGET_EXEC := clox
+BUILD_DIR := ./build
+SRC_DIRS := ./src
 
-all: clox
+# Find all the C and C++ files we want to compile
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 
-leak: clox
-	leaks --atExit -- ./clox
+# String substitution for every C/C++ file.
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
-clox: main.c memory.o chunk.o debug.o value.o vm.o compiler.o scanner.o
-	$(CC) $(CFLAGS) memory.o chunk.o debug.o value.o vm.o compiler.o scanner.o main.c -o clox
+# String substitution (suffix version without %).
+DEPS := $(OBJS:.o=.d)
 
-scanner.o: scanner.c
-	$(CC) -c $(CFLAGS) scanner.c -o scanner.o
+# Every folder in ./src will need to be passed to GCC so that it can find header files
+INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 
-compiler.o: compiler.c
-	$(CC) -c $(CFLAGS) compiler.c -o compiler.o
+# Add a prefix to INC_DIRS. So moduleA would become -ImoduleA. GCC understands this -I flag
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-vm.o: vm.c
-	$(CC) -c $(CFLAGS) vm.c -o vm.o
+# The -MMD and -MP flags together generate Makefiles for us!
+# These files will have .d instead of .o as the output.
+CFLAGS :=  -g -Wall $(INC_FLAGS) -MMD -MP
 
-value.o: value.c
-	$(CC) -c $(CFLAGS) value.c -o value.o
+# The final build step.
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
-debug.o: debug.c
-	$(CC) -c $(CFLAGS) debug.c -o debug.o
+# Build step for C source
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-memory.o: memory.c
-	$(CC) -c $(CFLAGS) memory.c -o memory.o
-
-chunk.o: chunk.c
-	$(CC) -c $(CFLAGS) chunk.c -o chunk.o
-
+.PHONY: clean
 clean:
-	rm -f *.o
+	rm -r $(BUILD_DIR)
+
+# Include the .d makefiles. The - at the front suppresses the errors of missing
+# Makefiles. Initially, all the .d files will be missing, and we don't want those
+# errors to show up.
+-include $(DEPS)
