@@ -1,8 +1,14 @@
 CC = gcc
 CFLAGS = -g -Wall
 
-clox: main.c memory.o chunk.o debug.o value.o
-	$(CC) $(CFLAGS) memory.o chunk.o debug.o value.o main.c -o clox
+leak: clox
+	leaks --atExit -- ./clox
+
+clox: main.c memory.o chunk.o debug.o value.o vm.o
+	$(CC) $(CFLAGS) memory.o chunk.o debug.o value.o vm.o main.c -o clox
+
+vm.o: vm.c
+	$(CC) -c $(CFLAGS) vm.c -o vm.o
 
 value.o: value.c
 	$(CC) -c $(CFLAGS) value.c -o value.o
