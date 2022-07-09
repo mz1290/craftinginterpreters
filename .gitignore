@@ -18,6 +18,7 @@
 
 # Ignore dSYM dirs
 *.dSYM/
+.DS_Store
 
 # Ignore build dir
 build/

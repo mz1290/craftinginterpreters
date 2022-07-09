@@ -71,6 +71,10 @@ func (l *Lox) run(source string) {
 	s := NewScanner(l, source)
 	tokens := s.ScanTokens()
 
+	for _, token := range tokens {
+		fmt.Println(token)
+	}
+
 	// create new parser instance
 	parser := NewParser(l, tokens)
 	statements := parser.Parse()
@@ -91,10 +95,6 @@ func (l *Lox) run(source string) {
 
 	// Execute/evaluate expression
 	l.Interpreter.Interpret(statements)
-
-	//for _, token := range tokens {
-	//	fmt.Println(token)
-	//}
 }
 
 //ErrorMessage prints error message as stderr
