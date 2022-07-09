@@ -1,26 +1,18 @@
 package scanning
 
 import (
-	"os"
+	"fmt"
 	"os/exec"
 	"testing"
 
 	"github.com/mz1290/craftinginterpreters/test/common"
 )
 
-var interpreter = os.Getenv("interpreter")
+var interpreter = ""
 
 func init() {
-	if interpreter != "golox" && interpreter != "clox" {
-		interpreter = "golox"
-		//interpreter = "clox"
-	}
-
-	if interpreter == "golox" {
-		interpreter = "../../golox/golox"
-	} else {
-		interpreter = "../../clox/build/clox"
-	}
+	interpreter = common.GetInterpreter()
+	fmt.Printf("USING: %s\n", interpreter)
 }
 
 func TestIdentifiers(t *testing.T) {
@@ -41,8 +33,15 @@ func TestIdentifiers(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
+	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
+
+		if token.Line == "|" {
+			token.Line = line
+		} else if line != token.Line {
+			line = token.Line
+		}
 
 		if token.Type == "EOF" {
 			break
@@ -80,8 +79,15 @@ func TestKeywords(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
+	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
+
+		if token.Line == "|" {
+			token.Line = line
+		} else if line != token.Line {
+			line = token.Line
+		}
 
 		if token.Type == "EOF" {
 			break
@@ -110,8 +116,15 @@ func TestNumbers(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
+	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
+
+		if token.Line == "|" {
+			token.Line = line
+		} else if line != token.Line {
+			line = token.Line
+		}
 
 		if token.Type == "EOF" {
 			break
@@ -152,8 +165,15 @@ func TestPunctuators(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
+	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
+
+		if token.Line == "|" {
+			token.Line = line
+		} else if line != token.Line {
+			line = token.Line
+		}
 
 		if token.Type == "EOF" {
 			break
@@ -178,8 +198,15 @@ func TestStrings(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
+	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
+
+		if token.Line == "|" {
+			token.Line = line
+		} else if line != token.Line {
+			line = token.Line
+		}
 
 		if token.Type == "EOF" {
 			break
@@ -206,8 +233,15 @@ func TestWhitespace(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
+	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
+
+		if token.Line == "|" {
+			token.Line = line
+		} else if line != token.Line {
+			line = token.Line
+		}
 
 		if token.Type == "EOF" {
 			break

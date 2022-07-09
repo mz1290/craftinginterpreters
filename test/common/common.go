@@ -2,22 +2,28 @@ package common
 
 import (
 	"bytes"
+	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
-var interpreter = os.Getenv("interpreter")
+// interpreter=golox go test -v -count=1 ./...
+var interpreter = GetInterpreter()
 
-func init() {
-	if interpreter != "golox" && interpreter != "clox" {
+func GetInterpreter() string {
+	chk := os.Getenv("interpreter")
+
+	if chk != "golox" && chk != "clox" {
+		log.Println("ERROR: interpreter not specified")
 		//interpreter = "golox"
-		interpreter = "clox"
+		chk = "clox"
 	}
 
-	if interpreter == "golox" {
-		interpreter = "../../golox/golox"
+	if chk == "golox" {
+		return "../../golox/golox"
 	} else {
-		interpreter = "../../clox/build/clox"
+		return "../../clox/build/clox"
 	}
 }
 
@@ -32,12 +38,12 @@ type TokenInfo struct {
 }
 
 func GetTokenInfo(output []byte) TokenInfo {
-	tokenLine := strings.Fields(string(output[:len(output)-1]))
+	tokenLine := strings.Fields(string(output))
 
 	if strings.HasSuffix(interpreter, "golox") {
 		return goloxTokenInfo(tokenLine)
 	} else {
-		return TokenInfo{}
+		return cloxTokenInfo(tokenLine)
 	}
 }
 
@@ -50,8 +56,25 @@ func goloxTokenInfo(tokenLine []string) TokenInfo {
 		token.Line = tokenLine[4]
 	} else {
 		token.Lexeme = tokenLine[3]
-		token.Line = tokenLine[5]
+		//lineRaw := tokenLine[5]
+		//lineClean := lineRaw[:len(lineRaw)-1]
+		//token.Line = lineClean
+
+		token.Line = tokenLine[5][:len(tokenLine[5])-1]
 	}
+
+	return token
+}
+
+func cloxTokenInfo(tokenLine []string) TokenInfo {
+	var token TokenInfo
+
+	token.Line = tokenLine[0]
+
+	val, _ := strconv.Atoi(tokenLine[1])
+	token.Type = TokenType(val).String()
+
+	token.Lexeme = tokenLine[2][1 : len(tokenLine[2])-1]
 
 	return token
 }
