@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mz1290/golox/internal/pkg/common"
 	"github.com/mz1290/golox/internal/pkg/lox"
 )
 
 func main() {
 	nArgs := len(os.Args)
+
+	common.SetDebug(os.Getenv("DEBUGLOX"))
 
 	if nArgs > 2 {
 		fmt.Println("Usage: golox [script]")

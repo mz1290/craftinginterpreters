@@ -54,6 +54,21 @@ static InterpretResult run() {
 
     // Read and execute a single bytecode instruction
     for (;;) {
+        if (DEBUG_LOX & DF_SCANNING) {
+            // Show the current contents of VM stack
+            printf("          ");
+            for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+                printf("[ ");
+                printValue(*slot);
+                printf(" ]");
+            }
+            printf("\n");
+
+            // disassembleInstruction expects an integer byte offset, we must convert ip
+            // back to a relative offset.
+            disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+        }
+/*
 #ifdef DEBUG_TRACE_EXECUTION
     // Show the current contents of VM stack
     printf("          ");
@@ -68,6 +83,7 @@ static InterpretResult run() {
     // back to a relative offset.
     disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
 #endif
+*/
 
         uint8_t instruction;
 
@@ -101,6 +117,22 @@ static InterpretResult run() {
 
 
 InterpretResult interpret(const char* source) {
-    compile(source);
-    return INTERPRET_OK;
+    // Create chunk that will contain program bytecode
+    Chunk chunk;
+    initChunk(&chunk);
+
+    // If any errors were encountered in program, discard chunk and return error
+    if (!compile(source, &chunk)) {
+        freeChunk(&chunk);
+        return INTERPRET_COMPILE_ERROR;
+    }
+
+    // Send completed chunk to the VM for execution
+    vm.chunk = &chunk;
+    vm.ip = vm.chunk->code;
+
+    InterpretResult result = run();
+
+    freeChunk(&chunk);
+    return result;
 }

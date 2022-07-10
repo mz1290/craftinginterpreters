@@ -2,6 +2,7 @@ package scanning
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -11,6 +12,9 @@ import (
 var interpreter = ""
 
 func init() {
+	// Tell lox to spit out scanning debug info
+	os.Setenv("DEBUGLOX", "scanning")
+
 	interpreter = common.GetInterpreter()
 	fmt.Printf("USING: %s\n", interpreter)
 }

@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "debug.h"
 
 void disassembleChunk(Chunk* chunk, const char* name) {
@@ -70,3 +68,33 @@ int disassembleInstruction(Chunk* chunk, int offset) {
     }
 }
 
+char* debugFlagOf(DebugFlag df) {
+    switch (df) {
+    case DF_SCANNING:   return "scanning"; break;
+    case DF_CODE:       return "code"; break;
+    default:            return "";
+    }
+}
+
+void SetDebug(char* settings) {
+    // Get the first debug setting
+    char* setting = strtok(settings, ",");
+
+    while (setting != NULL) {
+        // Lowercase the string for comparison
+        for(int i = 0; setting[i]; i++){
+            setting[i] = tolower(setting[i]);
+        }
+
+        if (strcmp(setting, debugFlagOf(DF_SCANNING)) == 0) {
+            printf("enabling debug scanning output\n");
+            DEBUG_LOX |= DF_SCANNING;
+        } else if (strcmp(setting, debugFlagOf(DF_CODE)) == 0) {
+            printf("enabling debug code output\n");
+            DEBUG_LOX |= DF_CODE;
+        }
+    
+        // Advance to next setting
+        setting = strtok(NULL, ",");
+    }
+}

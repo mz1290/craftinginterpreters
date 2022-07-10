@@ -216,7 +216,7 @@ static Token string() {
     }
 
     // Check if we brok out of loop above because of EOF and report error if so.
-    if (isAtEnd()) return errorToken("Unterminated string.");
+    if (isAtEnd()) return errorToken("unterminated string");
 
     // Consume the closing quote.
     advance();
@@ -279,5 +279,5 @@ Token scanToken() {
         case '"': return string();
     }
 
-    return errorToken("Unexpected character.");
+    return errorToken("unexpected character");
 }

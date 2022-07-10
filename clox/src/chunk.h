@@ -34,7 +34,8 @@ void initChunk(Chunk*);
 // Appends a byte to the end of the chunk.
 void writeChunk(Chunk*, uint8_t, int);
 
-// Add a new constant to the chunk and return index postion.
+// Adds given value to then end of the chunk's constant table and returns its
+// index.
 int addConstant(Chunk* chunk, Value value);
 
 // Deallocates and zeroes out contents of memory.

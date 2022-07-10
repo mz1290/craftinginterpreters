@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mz1290/golox/internal/pkg/common"
 	"github.com/mz1290/golox/internal/pkg/errors"
 	"github.com/mz1290/golox/internal/pkg/token"
 )
@@ -16,6 +17,7 @@ type Lox struct {
 	HadError        bool // represents syntax/static errors
 	HadRuntimeError bool // errors during execution
 	Interpreter     *Interpreter
+	Debug           int
 }
 
 func New() *Lox {
@@ -71,8 +73,10 @@ func (l *Lox) run(source string) {
 	s := NewScanner(l, source)
 	tokens := s.ScanTokens()
 
-	for _, token := range tokens {
-		fmt.Println(token)
+	if (common.DEBUGLOX & common.SCANNING) != 0 {
+		for _, token := range tokens {
+			fmt.Println(token)
+		}
 	}
 
 	// create new parser instance

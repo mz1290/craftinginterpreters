@@ -63,6 +63,7 @@ static void runFile(const char* path) {
 }
 
 int main(int argc, const char* argv[]) {
+    SetDebug(getenv("DEBUGLOX"));
     initVM();
 
     if (argc == 1) {
