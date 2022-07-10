@@ -72,6 +72,7 @@ char* debugFlagOf(DebugFlag df) {
     switch (df) {
     case DF_SCANNING:   return "scanning"; break;
     case DF_CODE:       return "code"; break;
+    case DF_TRACE:      return "trace"; break;
     default:            return "";
     }
 }
@@ -87,11 +88,14 @@ void SetDebug(char* settings) {
         }
 
         if (strcmp(setting, debugFlagOf(DF_SCANNING)) == 0) {
-            printf("enabling debug scanning output\n");
+            //printf("enabling debug scanning output\n");
             DEBUG_LOX |= DF_SCANNING;
         } else if (strcmp(setting, debugFlagOf(DF_CODE)) == 0) {
-            printf("enabling debug code output\n");
+            //printf("enabling debug code output\n");
             DEBUG_LOX |= DF_CODE;
+        } else if (strcmp(setting, debugFlagOf(DF_TRACE)) == 0) {
+            //printf("enabling debug trace output\n");
+            DEBUG_LOX |= DF_TRACE;
         }
     
         // Advance to next setting

@@ -54,7 +54,7 @@ static void errorAt(Token* token, const char* message) {
     // Print where error occurred
     fprintf(stderr, "[line %d] error", token->line);
 
-    // Print lexem if human readable
+    // Print lexeme if human readable
     if (token->type == TOKEN_EOF) {
         fprintf(stderr, " at end");
     } else if (token->type == TOKEN_ERROR) {
@@ -303,7 +303,6 @@ bool compile(const char* source, Chunk* chunk) {
     parser.hadError = false;
     parser.panicMode = false;
 
-    // tbd
     advance();
 
     // Parse a single expression

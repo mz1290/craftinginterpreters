@@ -13,7 +13,8 @@ int DEBUG_LOX;
 // https://stackoverflow.com/questions/1631266/flags-enum-c
 typedef enum {
     DF_SCANNING = 1 << 0,
-    DF_CODE = 1 << 1,
+    DF_CODE     = 1 << 1,
+    DF_TRACE    = 1 << 2,
 } DebugFlag;
 
 void SetDebug(char*);

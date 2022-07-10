@@ -12,6 +12,26 @@ void initScanner(const char* source) {
     scanner.start = source;
     scanner.current = source;
     scanner.line = 1;
+
+    if (DEBUG_LOX & DF_SCANNING) {
+        Scanner tmp = scanner;
+
+        Scanner scannerCopy;
+        scannerCopy.start = source;
+        scannerCopy.current = source;
+        scannerCopy.line = 1;
+
+        scanner = scannerCopy;
+
+        Token current;
+        for (;;) {
+            current = scanToken();
+            printToken(current);
+            if (current.type == TOKEN_EOF) break;
+        }
+
+        scanner = tmp;
+    }
 }
 
 static bool isAlpha(char c) {
@@ -280,4 +300,8 @@ Token scanToken() {
     }
 
     return errorToken("unexpected character");
+}
+
+void printToken(Token tok) {
+    printf("type: %d lexeme: %.*s line: %d\n", tok.type, tok.length, tok.start, tok.line);
 }

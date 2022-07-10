@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "debug.h"
 
 
 typedef enum {
@@ -48,6 +49,7 @@ typedef struct {
 } Token;
 
 void initScanner(const char*);
+void printToken(Token tok);
 
 // Scan and return the next token from the source code.
 Token scanToken();

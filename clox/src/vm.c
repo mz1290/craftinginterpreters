@@ -54,7 +54,7 @@ static InterpretResult run() {
 
     // Read and execute a single bytecode instruction
     for (;;) {
-        if (DEBUG_LOX & DF_SCANNING) {
+        if (DEBUG_LOX & DF_TRACE) {
             // Show the current contents of VM stack
             printf("          ");
             for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {

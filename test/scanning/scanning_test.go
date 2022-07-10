@@ -37,15 +37,8 @@ func TestIdentifiers(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
-	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
-
-		if token.Line == "|" {
-			token.Line = line
-		} else if line != token.Line {
-			line = token.Line
-		}
 
 		if token.Type == "EOF" {
 			break
@@ -83,15 +76,8 @@ func TestKeywords(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
-	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
-
-		if token.Line == "|" {
-			token.Line = line
-		} else if line != token.Line {
-			line = token.Line
-		}
 
 		if token.Type == "EOF" {
 			break
@@ -120,15 +106,8 @@ func TestNumbers(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
-	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
-
-		if token.Line == "|" {
-			token.Line = line
-		} else if line != token.Line {
-			line = token.Line
-		}
 
 		if token.Type == "EOF" {
 			break
@@ -169,15 +148,8 @@ func TestPunctuators(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
-	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
-
-		if token.Line == "|" {
-			token.Line = line
-		} else if line != token.Line {
-			line = token.Line
-		}
 
 		if token.Type == "EOF" {
 			break
@@ -202,15 +174,8 @@ func TestStrings(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
-	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
-
-		if token.Line == "|" {
-			token.Line = line
-		} else if line != token.Line {
-			line = token.Line
-		}
 
 		if token.Type == "EOF" {
 			break
@@ -237,15 +202,8 @@ func TestWhitespace(t *testing.T) {
 	}
 
 	results := common.GetStdOutLines(stdout)
-	line := "1"
 	for i, result := range results {
 		token := common.GetTokenInfo(result)
-
-		if token.Line == "|" {
-			token.Line = line
-		} else if line != token.Line {
-			line = token.Line
-		}
 
 		if token.Type == "EOF" {
 			break
