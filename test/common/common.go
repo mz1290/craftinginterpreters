@@ -16,8 +16,8 @@ func GetInterpreter() string {
 
 	if chk != "golox" && chk != "clox" {
 		log.Println("ERROR: interpreter not specified")
-		//interpreter = "golox"
-		chk = "clox"
+		chk = "golox"
+		//chk = "clox"
 	}
 
 	if chk == "golox" {
