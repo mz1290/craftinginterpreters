@@ -86,7 +86,7 @@ func (i *Interpreter) VisitSetExpr(expr ast.Set) (interface{}, error) {
 	object.(*Instance).Set(expr.Name, value)
 
 	// This is a setter so don't need to return any value
-	return nil, nil
+	return value, nil
 }
 
 func (i *Interpreter) VisitSuperExpr(expr ast.Super) (interface{}, error) {
