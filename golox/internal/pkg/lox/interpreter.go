@@ -452,7 +452,7 @@ func (i *Interpreter) VisitAssignExpr(expr ast.Assign) (interface{}, error) {
 	if distance, ok := i.locals[expr]; ok {
 		i.environment.AssignAt(distance, expr.Name, value)
 	} else {
-		i.environment.Assign(expr.Name, value)
+		i.globals.Assign(expr.Name, value)
 	}
 
 	return value, nil
