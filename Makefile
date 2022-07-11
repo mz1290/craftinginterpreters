@@ -9,3 +9,8 @@ test-clox:
 test-clean:
 	cd test/ && \
 	go clean -testcache
+
+golox-clean:
+	rm -f golox/golox
+
+clean: golox-clean
