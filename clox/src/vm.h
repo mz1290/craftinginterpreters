@@ -2,6 +2,7 @@
 #define clox_vm_h
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "chunk.h"
 #include "common.h"
