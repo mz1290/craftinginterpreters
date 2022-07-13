@@ -1,12 +1,7 @@
 #ifndef clox_debug_h
 #define clox_debug_h
 
-#include <ctype.h>
-#include <string.h>
-#include <stdio.h>
-
 #include "chunk.h"
-#include "value.h"
 
 int DEBUG_LOX;
 

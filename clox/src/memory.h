@@ -2,9 +2,15 @@
 #define clox_memory_h
 
 #include "common.h"
+#include "object.h"
 
 #define GROW_DEFAULT    8
 #define GROW_FACTOR     2
+
+// Allocate a new array on the heap, big enough for the string’s characters and
+// the trailing terminator.
+#define ALLOCATE(type, count) \
+    (type*)reallocate(NULL, 0, sizeof(type) * (count))
 
 // Calculate a new capacity based on input capacity. Scales current capacity by
 // a GROW_FACTOR. If 0 elements, initialize at GROW_DEFAULT elements.

@@ -1,14 +1,8 @@
 #ifndef clox_vm_h
 #define clox_vm_h
 
-#include <stdio.h>
-#include <stdarg.h>
-
-#include "chunk.h"
-#include "common.h"
-#include "debug.h"
+#include "object.h"
 #include "value.h"
-#include "compiler.h"
 
 #define STACK_MAX 256
 

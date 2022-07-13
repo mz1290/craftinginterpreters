@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <string.h>
+
+#include "common.h"
+#include "debug.h"
 #include "scanner.h"
 
 typedef struct {
