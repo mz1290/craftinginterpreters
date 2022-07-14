@@ -16,6 +16,7 @@ typedef struct {
 
     Value stack[STACK_MAX];
     Value* stackTop;
+    Obj* objects;
 } VM;
 
 // Results the VM will use to handle exiting scenarios
@@ -24,6 +25,8 @@ typedef enum {
     INTERPRET_COMPILE_ERROR,
     INTERPRET_RUNTIME_ERROR
 } InterpretResult;
+
+extern VM vm;
 
 void initVM();
 void freeVM();

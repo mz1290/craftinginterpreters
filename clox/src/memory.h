@@ -12,6 +12,8 @@
 #define ALLOCATE(type, count) \
     (type*)reallocate(NULL, 0, sizeof(type) * (count))
 
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
+
 // Calculate a new capacity based on input capacity. Scales current capacity by
 // a GROW_FACTOR. If 0 elements, initialize at GROW_DEFAULT elements.
 #define GROW_CAPACITY(capacity) \
@@ -38,5 +40,7 @@
 // 3. shrink existing   non-zero    < old
 // 4. grow existing     non-zero    > old
 void* reallocate(void*, size_t, size_t);
+
+void freeObjects();
 
 #endif
