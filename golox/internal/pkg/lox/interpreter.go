@@ -52,10 +52,10 @@ func (i *Interpreter) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
 	if expr.Operator.Type == token.OR {
 		if common.IsTruthy(left) {
 			return left, nil
-		} else {
-			if !common.IsTruthy(left) {
-				return left, nil
-			}
+		}
+	} else {
+		if !common.IsTruthy(left) {
+			return left, nil
 		}
 	}
 
