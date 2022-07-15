@@ -434,7 +434,10 @@ func (i *Interpreter) VisitWhileStmt(stmt ast.While) (interface{}, error) {
 		}
 
 		if common.IsTruthy(condition) {
-			i.execute(stmt.Body)
+			_, err := i.execute(stmt.Body)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			break
 		}
