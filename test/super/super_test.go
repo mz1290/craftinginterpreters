@@ -79,7 +79,7 @@ func TestExtraArguments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: expected 2 arguments but got 4`
+	expected := `[line 10] RuntimeError: expected 2 arguments but got 4`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -108,7 +108,7 @@ func TestMissingArguments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: expected 2 arguments but got 1`
+	expected := `[line 9] RuntimeError: expected 2 arguments but got 1`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -162,7 +162,7 @@ func TestNoSuperclassMethod(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 5] undefined property doesNotExist`
+	expected := `[line 5] RuntimeError: undefined property doesNotExist`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
