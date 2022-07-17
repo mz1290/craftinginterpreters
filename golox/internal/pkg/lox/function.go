@@ -58,7 +58,7 @@ func (f *Function) Call(interpreter *Interpreter, arguments []interface{}) (inte
 		return f.Closure.GetAt(0, "this"), nil
 	}
 
-	return nil, nil
+	return nil, err
 }
 
 func (f *Function) Arity() int {
