@@ -20,14 +20,15 @@ typedef enum {
 } ObjType;
 
 struct Obj {
-    ObjType type;
+    ObjType     type;
     struct Obj* next;
 };
 
 struct ObjString {
-    Obj obj; // provides required state to be an "Obj"
-    int length;
-    char* chars;
+    Obj      obj; // provides required state to be an "Obj"
+    int      length;
+    char*    chars;
+    uint32_t hash;
 };
 
 ObjString* takeString(char*, int);
