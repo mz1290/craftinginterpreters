@@ -31,10 +31,13 @@ static void runtimeError(const char* format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;
+
+    initTable(&vm.globals);
     initTable(&vm.strings);
 }
 
 void freeVM() {
+    freeTable(&vm.globals);
     freeTable(&vm.strings);
     freeObjects();
 }
@@ -85,8 +88,15 @@ static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 
 // Reads the next byte from the bytecode, treats the resulting number as an
-// index, and looks up the corresponding Value in the chunk’s constant table
+// index, and looks up the corresponding Value in the chunk’s constant table.
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+
+// Reads one-byte operand from the bytecode chunk. Treats that as an index into
+// the chunk’s constant table and returns the string at that index. Does not
+// check that the value is a string — it just indiscriminately casts it since
+// the clox compiler never emits an instruction that refers to a non-string
+// constant.
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 
 // This is a nifty preprocessor trick. Passing an operator is valid because the
 // preprocessor only cares about tokens. The do-while is necessary for a macro
@@ -95,7 +105,7 @@ static InterpretResult run() {
 #define BINARY_OP(valueType, op) \
     do { \
       if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
-        runtimeError("Operands must be numbers."); \
+        runtimeError("operands must be numbers"); \
         return INTERPRET_RUNTIME_ERROR; \
       } \
       double b = AS_NUMBER(pop()); \
@@ -148,6 +158,33 @@ static InterpretResult run() {
         case OP_NIL:      push(NIL_VAL); break;
         case OP_TRUE:     push(BOOL_VAL(true)); break;
         case OP_FALSE:    push(BOOL_VAL(false)); break;
+        case OP_POP:      pop(); break;
+        case OP_GET_GLOBAL: {
+            ObjString* name = READ_STRING();
+            Value value;
+            if (!tableGet(&vm.globals, name, &value)) {
+                runtimeError("undefined variable \"%s\"", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+
+            push(value);
+            break;
+        }
+        case OP_DEFINE_GLOBAL: {
+            ObjString* name = READ_STRING();
+            tableSet(&vm.globals, name, peek(0));
+            pop();
+            break;
+        }
+        case OP_SET_GLOBAL: {
+            ObjString* name = READ_STRING();
+            if (tableSet(&vm.globals, name, peek(0))) {
+                tableDelete(&vm.globals, name); 
+                runtimeError("undefined variable \"%s\"", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            break;
+        }
         case OP_EQUAL: {
             Value b = pop();
             Value a = pop();
@@ -165,7 +202,7 @@ static InterpretResult run() {
                 push(NUMBER_VAL(a + b));
             } else {
                 runtimeError(
-                    "Operands must be two numbers or two strings.");
+                    "operands must be two numbers or two strings");
                 return INTERPRET_RUNTIME_ERROR;
             }
             break;
@@ -178,14 +215,20 @@ static InterpretResult run() {
             break;
         case OP_NEGATE:
             if (!IS_NUMBER(peek(0))) {
-                runtimeError("Operand must be a number.");
+                runtimeError("operand must be a number");
                 return INTERPRET_RUNTIME_ERROR;
             }
             push(NUMBER_VAL(-AS_NUMBER(pop())));
             break;
-        case OP_RETURN: {
+        case OP_PRINT: {
+            // The code for evaluating the expression has already run, we just
+            // need to pop the result from top of stack.
             printValue(pop());
             printf("\n");
+            break;
+        }
+        case OP_RETURN: {
+            // Exit interpreter
             return INTERPRET_OK;
         }
         }
@@ -193,6 +236,7 @@ static InterpretResult run() {
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef BINARY_OP
 }
 
