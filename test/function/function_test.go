@@ -24,7 +24,7 @@ func TestBodyMustBeBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "123": "expected '{' before \"function\" body"`
+	expected := `[line 3] error at "123": expected '{' before "function" body`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -71,7 +71,7 @@ func TestLocalMutualRecursion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 4] RuntimeError: undefined variable isOdd`
+	expected := `[line 4] RuntimeError: undefined variable "isOdd"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -117,7 +117,7 @@ func TestMissingCommaInParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "c": "expected ')' after parameters"`
+	expected := `[line 3] error at "c": expected ')' after parameters`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -190,7 +190,7 @@ func TestTooManyArguments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 260] Error at "a": "can't have more than 255 arguments"`
+	expected := `[line 260] error at "a": can't have more than 255 arguments`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -208,7 +208,7 @@ func TestTooManyParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 257] Error at "a": "can't have more than 255 parameters"`
+	expected := `[line 257] error at "a": can't have more than 255 parameters`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

@@ -24,7 +24,7 @@ func TestUnexpectedCharacter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error: "unexpected character"`
+	expected := `[line 3] error: unexpected character`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

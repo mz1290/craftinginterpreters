@@ -23,7 +23,7 @@ func TestClassInElse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "class": "expected expression"`
+	expected := `[line 2] error at "class": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -41,7 +41,7 @@ func TestClassInThen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "class": "expected expression"`
+	expected := `[line 2] error at "class": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -81,7 +81,7 @@ func TestFunInElse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "fun": "expected expression"`
+	expected := `[line 2] error at "fun": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -99,7 +99,7 @@ func TestFunInThen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "fun": "expected expression"`
+	expected := `[line 2] error at "fun": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -139,7 +139,7 @@ func TestVarInElse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "var": "expected expression"`
+	expected := `[line 2] error at "var": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -157,7 +157,7 @@ func TestVarInThen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "var": "expected expression"`
+	expected := `[line 2] error at "var": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

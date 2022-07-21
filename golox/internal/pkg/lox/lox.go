@@ -115,7 +115,7 @@ func (l *Lox) ErrorTokenMessage(t *token.Token, message string) {
 }
 
 func (l *Lox) report(line int, where string, message string) {
-	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %q\n", line, where, message)
+	fmt.Fprintf(os.Stderr, "[line %d] error%s: %s\n", line, where, message)
 	l.HadError = true
 }
 

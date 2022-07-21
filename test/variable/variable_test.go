@@ -24,7 +24,7 @@ func TestCollideWithParameter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "a": "already a variable with this name in this scope"`
+	expected := `[line 2] error at "a": already a variable with this name in this scope`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -42,7 +42,7 @@ func TestDuplicateLocal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "a": "already a variable with this name in this scope"`
+	expected := `[line 3] error at "a": already a variable with this name in this scope`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -60,7 +60,7 @@ func TestDuplicateParameter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "arg": "already a variable with this name in this scope"`
+	expected := `[line 2] error at "arg": already a variable with this name in this scope`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -188,7 +188,7 @@ func TestUndefinedGlobal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: undefined variable notDefined`
+	expected := `[line 1] RuntimeError: undefined variable "notDefined"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -206,7 +206,7 @@ func TestUndefinedLocal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] RuntimeError: undefined variable notDefined`
+	expected := `[line 2] RuntimeError: undefined variable "notDefined"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -246,7 +246,7 @@ func TestUseFalseAsVar(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "false": "expected variable name"`
+	expected := `[line 2] error at "false": expected variable name`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -275,7 +275,7 @@ func TestUseLocalInInitializer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "a": "can't read local variable in its own initializer"`
+	expected := `[line 3] error at "a": can't read local variable in its own initializer`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -293,7 +293,7 @@ func TestUseNilAsVar(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "nil": "expected variable name"`
+	expected := `[line 2] error at "nil": expected variable name`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -311,7 +311,7 @@ func TestUseThisAsVar(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "this": "expected variable name"`
+	expected := `[line 2] error at "this": expected variable name`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

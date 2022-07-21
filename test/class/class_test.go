@@ -35,7 +35,7 @@ func TestInheritSelf(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] Error at "Foo": "a class can't inherit from itself"`
+	expected := `[line 1] error at "Foo": a class can't inherit from itself`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -75,7 +75,7 @@ func TestLocalInheritSelf(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "Foo": "a class can't inherit from itself"`
+	expected := `[line 2] error at "Foo": a class can't inherit from itself`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

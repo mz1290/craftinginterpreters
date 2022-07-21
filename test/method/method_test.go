@@ -82,7 +82,7 @@ func TestNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] RuntimeError: undefined variable property unknown`
+	expected := `[line 3] RuntimeError: undefined variable property "unknown"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -111,7 +111,7 @@ func TestReferToName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] RuntimeError: undefined variable method`
+	expected := `[line 3] RuntimeError: undefined variable "method"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -129,7 +129,7 @@ func TestToManyArguments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 259] Error at "a": "can't have more than 255 arguments"`
+	expected := `[line 259] error at "a": can't have more than 255 arguments`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -147,7 +147,7 @@ func TestToManyParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 258] Error at "a": "can't have more than 255 parameters"`
+	expected := `[line 258] error at "a": can't have more than 255 parameters`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

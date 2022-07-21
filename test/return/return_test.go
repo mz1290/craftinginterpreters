@@ -24,7 +24,7 @@ func TestAtTopLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] Error at "return": "can't return from top-level code"`
+	expected := `[line 1] error at "return": can't return from top-level code`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

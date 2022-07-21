@@ -24,7 +24,7 @@ func TestDecimalPointAtEOF(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at end: "expected property name after '.'"`
+	expected := `[line 2] error at end: expected property name after '.'`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -42,7 +42,7 @@ func TestLeadingDot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at ".": "expected expression"`
+	expected := `[line 2] error at ".": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -82,7 +82,7 @@ func TestTrailingDot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at ";": "expected property name after '.'"`
+	expected := `[line 2] error at ";": expected property name after '.'`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

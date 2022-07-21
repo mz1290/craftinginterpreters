@@ -24,7 +24,7 @@ func TestErrorAfterMultiline(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 7] RuntimeError: undefined variable err`
+	expected := `[line 7] RuntimeError: undefined variable "err"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -64,7 +64,7 @@ func TestUnterminated(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error: "unterminated string"`
+	expected := `[line 2] error: unterminated string`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

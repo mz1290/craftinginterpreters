@@ -104,7 +104,7 @@ func (i *Interpreter) VisitSuperExpr(expr ast.Super) (interface{}, error) {
 	method := superclass.FindMethod(expr.Method.Lexeme)
 	if method == nil {
 		return nil, errors.RuntimeError.New(expr.Method,
-			fmt.Sprintf("undefined property %s", expr.Method.Lexeme))
+			fmt.Sprintf("undefined property %q", expr.Method.Lexeme))
 	}
 
 	return method.Bind(object), nil

@@ -42,7 +42,7 @@ func (i *Instance) Get(name *token.Token) interface{} {
 	}
 
 	i.runtime.RuntimeError(errors.RuntimeError.New(name,
-		fmt.Sprintf("undefined variable property %s", name.Lexeme)))
+		fmt.Sprintf("undefined variable property %q", name.Lexeme)))
 
 	return nil
 }

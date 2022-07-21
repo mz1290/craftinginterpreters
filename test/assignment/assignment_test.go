@@ -46,7 +46,7 @@ func TestGrouping(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "=": "invalid assignment target"`
+	expected := `[line 2] error at "=": invalid assignment target`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -64,7 +64,7 @@ func TestInfixOperator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "=": "invalid assignment target"`
+	expected := `[line 3] error at "=": invalid assignment target`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -93,7 +93,7 @@ func TestPrefixOperator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "=": "invalid assignment target"`
+	expected := `[line 2] error at "=": invalid assignment target`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -122,7 +122,7 @@ func TestToThis(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "=": "invalid assignment target"`
+	expected := `[line 3] error at "=": invalid assignment target`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -140,7 +140,7 @@ func TestUndefined(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: undefined variable unknown`
+	expected := `[line 1] RuntimeError: undefined variable "unknown"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

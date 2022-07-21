@@ -295,7 +295,7 @@ func TestSetEvaluationOrder(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: undefined variable undefined1`
+	expected := `[line 1] RuntimeError: undefined variable "undefined1"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -421,7 +421,7 @@ func TestUndefined(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 4] RuntimeError: undefined variable property bar`
+	expected := `[line 4] RuntimeError: undefined variable property "bar"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

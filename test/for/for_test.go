@@ -24,7 +24,7 @@ func TestClassInBody(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "class": "expected expression"`
+	expected := `[line 2] error at "class": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -53,7 +53,7 @@ func TestFuncInBody(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "fun": "expected expression"`
+	expected := `[line 2] error at "fun": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -104,7 +104,7 @@ func TestStatementCondition(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "{": "expected expression"`
+	expected := `[line 3] error at "{": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -122,7 +122,7 @@ func TestStatementIncrement(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "{": "expected expression"`
+	expected := `[line 2] error at "{": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -140,7 +140,7 @@ func TestStatementInitializer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "{": "expected expression"`
+	expected := `[line 3] error at "{": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -169,7 +169,7 @@ func TestVarInBody(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] Error at "var": "expected expression"`
+	expected := `[line 2] error at "var": expected expression`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

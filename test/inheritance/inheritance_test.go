@@ -100,7 +100,7 @@ func TestParenthesizedSuperclas(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 4] Error at "(": "expected superclass name"`
+	expected := `[line 4] error at "(": expected superclass name`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

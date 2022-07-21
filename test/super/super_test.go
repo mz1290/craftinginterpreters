@@ -126,7 +126,7 @@ func TestNoSuperclassBind(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "super": "can't use 'super' in a class with no superclass"`
+	expected := `[line 3] error at "super": can't use 'super' in a class with no superclass`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -144,7 +144,7 @@ func TestNoSuperclassCall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "super": "can't use 'super' in a class with no superclass"`
+	expected := `[line 3] error at "super": can't use 'super' in a class with no superclass`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -162,7 +162,7 @@ func TestNoSuperclassMethod(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 5] RuntimeError: undefined property doesNotExist`
+	expected := `[line 5] RuntimeError: undefined property "doesNotExist"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -180,7 +180,7 @@ func TestParenthesized(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 8] Error at ")": "expected '.' after 'super'"`
+	expected := `[line 8] error at ")": expected '.' after 'super'`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -209,7 +209,7 @@ func TestSuperAtTopLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] Error at "super": "can't use 'super' outside of a class"`
+	expected := `[line 1] error at "super": can't use 'super' outside of a class`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -218,7 +218,7 @@ func TestSuperAtTopLevel(t *testing.T) {
 		t.Fatalf("expected error (%s) got %s", expected, actualErr)
 	}
 
-	expected = `[line 2] Error at "super": "can't use 'super' outside of a class"`
+	expected = `[line 2] error at "super": can't use 'super' outside of a class`
 
 	scanner.Scan()
 	actualErr = scanner.Text()
@@ -257,7 +257,7 @@ func TestSuperInTopLevelFunction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] Error at "super": "can't use 'super' outside of a class"`
+	expected := `[line 1] error at "super": can't use 'super' outside of a class`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -275,7 +275,7 @@ func TestSuperWithoutDot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 6] Error at ";": "expected '.' after 'super'"`
+	expected := `[line 6] error at ";": expected '.' after 'super'`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -293,7 +293,7 @@ func TestSuperWithouName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 5] Error at ";": "expected superclass method name"`
+	expected := `[line 5] error at ";": expected superclass method name`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

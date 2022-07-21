@@ -39,7 +39,7 @@ func (e Environment) Get(name *token.Token) interface{} {
 	}
 
 	e.runtime.RuntimeError(errors.RuntimeError.New(name,
-		fmt.Sprintf("undefined variable %s", name.Lexeme)))
+		fmt.Sprintf("undefined variable %q", name.Lexeme)))
 	return nil
 }
 
@@ -55,7 +55,7 @@ func (e *Environment) Assign(name *token.Token, value interface{}) {
 	}
 
 	e.runtime.RuntimeError(errors.RuntimeError.New(name,
-		fmt.Sprintf("undefined variable %s", name.Lexeme)))
+		fmt.Sprintf("undefined variable %q", name.Lexeme)))
 }
 
 func (e *Environment) Define(name string, value interface{}) {

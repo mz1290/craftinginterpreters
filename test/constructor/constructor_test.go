@@ -155,7 +155,7 @@ func TestReturnValue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] Error at "return": "can't return a value from an initializer"`
+	expected := `[line 3] error at "return": can't return a value from an initializer`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
