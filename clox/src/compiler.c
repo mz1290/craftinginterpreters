@@ -161,6 +161,36 @@ static void emitBytes(uint8_t byte1, uint8_t byte2) {
     emitByte(byte2);
 }
 
+static void emitLoop(int loopStart) {
+    // Instruction to loop backwards by a given offset
+    emitByte(OP_LOOP);
+
+    // Calculate offset of current instruction to jump back location. The +2
+    // accounts for jumping over the instruction's own operands that we need
+    // to also jump over.
+    int offset = currentChunk()->count - loopStart + 2;
+    if (offset > UINT16_MAX) error("loop body too large");
+
+    // Emits the first byte of the offset
+    emitByte((offset >> 8) & 0xff);
+
+    // Emits the second byte of the offset
+    emitByte(offset & 0xff);
+}
+
+static int emitJump(uint8_t instruction) {
+    // Emit a bytecode instruction and write placeholder operand for jump offset
+    emitByte(instruction);
+
+    // We reserve two bytes for jump offset. This gives us 16-bits
+    // (65,535 bytes) we could jump.
+    emitByte(0xff);
+    emitByte(0xff);
+
+    // Return the offset of the emitted instruction in the chunk
+    return currentChunk()->count - 2;
+}
+
 static void emitReturn() {
     emitByte(OP_RETURN);
 }
@@ -180,6 +210,23 @@ static void emitConstant(Value value) {
     // Add value to constant table using makeConstant(), then emit OP_CONSTANT
     // instruction and push onto stack at runtime.
     emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
+// Goes back into the bytecode and replaces the operand at the given location
+// with the calculated jump offset.
+static void patchJump(int offset) {
+    // -2 to adjust for the bytecode for the jump offset itself.
+    int jump = currentChunk()->count - offset - 2;
+
+    if (jump > UINT16_MAX) {
+        error("too much code to jump over");
+    }
+
+    // Set the first byte by bit shifting right 8 bits to eliminate the 2nd byte
+    currentChunk()->code[offset] = (jump >> 8) & 0xff;
+
+    // Set the second byte by defaulting to the right 8 bits
+    currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
 static void initCompiler(Compiler* compiler) {
@@ -331,6 +378,16 @@ static void defineVariable(uint8_t global) {
     emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
+// Assumes left expression has already been compiled.
+static void and_(bool canAssign) {
+    int endJump = emitJump(OP_JUMP_IF_FALSE);
+
+    emitByte(OP_POP);
+    parsePrecedence(PREC_AND);
+
+    patchJump(endJump);
+}
+
 static void binary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
     ParseRule* rule = getRule(operatorType);
@@ -374,6 +431,18 @@ static void number(bool canAssign) {
     
     // Generate code to load value
     emitConstant(NUMBER_VAL(value));
+}
+
+// Assumes left expression has already been compiled.
+static void or_(bool canAssign) {
+    int elseJump = emitJump(OP_JUMP_IF_FALSE);
+    int endJump = emitJump(OP_JUMP);
+
+    patchJump(elseJump);
+    emitByte(OP_POP);
+
+    parsePrecedence(PREC_OR);
+    patchJump(endJump);
 }
 
 // Takes the string’s characters directly from the lexeme,trimes the trailing
@@ -453,7 +522,7 @@ ParseRule rules[] = {
     [TOKEN_IDENTIFIER]    = {variable, NULL,   PREC_NONE},
     [TOKEN_STRING]        = {string,   NULL,   PREC_NONE},
     [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
-    [TOKEN_AND]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_AND]           = {NULL,     and_,   PREC_AND},
     [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
     [TOKEN_FALSE]         = {literal,  NULL,   PREC_NONE},
@@ -461,7 +530,7 @@ ParseRule rules[] = {
     [TOKEN_FUN]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
     [TOKEN_NIL]           = {literal,  NULL,   PREC_NONE},
-    [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_OR]            = {NULL,     or_,    PREC_OR},
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
@@ -559,10 +628,140 @@ static void expressionStatement() {
     emitByte(OP_POP);
 }
 
+static void forStatement() {
+    // Start scope for variables tied to loop body
+    beginScope();
+
+    consume(TOKEN_LEFT_PAREN, "expected '(' after \"for\"");
+
+    // Initializer clause
+    if (match(TOKEN_SEMICOLON)) {
+        // No initializer
+    } else if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else {
+        expressionStatement();
+    }
+
+    // Record starting offset
+    int loopStart = currentChunk()->count;
+
+    // Condition clause
+    int exitJump = -1;
+    if (!match(TOKEN_SEMICOLON)) {
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+
+        // Jump out of the loop if the condition is false
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP); // Condition
+    }
+
+
+    // Increment clause
+    if (!match(TOKEN_RIGHT_PAREN)) {
+        // We must jump over the increment clause to body start
+        int bodyJump = emitJump(OP_JUMP);
+        int incrementStart = currentChunk()->count;
+
+        // Compile the expression
+        expression();
+
+        // We only want "side-effects" so after compiling the expression we
+        // issue a pop to discard the produced value
+        emitByte(OP_POP);
+
+        consume(TOKEN_RIGHT_PAREN, "expected \")\" after for clauses");
+
+        // Start normal loop
+        emitLoop(loopStart);
+
+        // Now we update loop start to point at the increment offset so we can
+        // beging to update each iteration
+        loopStart = incrementStart;
+
+        // Replace operand with calculated jump offset
+        patchJump(bodyJump);
+    }
+
+    // Compile body
+    statement();
+
+    // Start loop
+    emitLoop(loopStart);
+
+    // Add the jump offset if there is a condition clause
+    if (exitJump != -1) {
+        patchJump(exitJump);
+        emitByte(OP_POP); // Condition.
+    }
+
+    // Clean up local variables
+    endScope();
+}
+
+static void ifStatement() {
+    consume(TOKEN_LEFT_PAREN, "expected \"(\" after \"if\"");
+    // Compile condition expression
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "expected \")\" after condition"); 
+
+    // Set up falsey jump
+    int thenJump = emitJump(OP_JUMP_IF_FALSE);
+
+    // then-branch cleanup
+    emitByte(OP_POP);
+
+    // Compile then-branch
+    statement();
+
+    // Set up truthy jump
+    int elseJump = emitJump(OP_JUMP);
+
+    // Replace operand with calculated jump offset falsey jump
+    patchJump(thenJump);
+
+    // else-branch cleanup
+    emitByte(OP_POP);
+
+    // Compile else-branch
+    if (match(TOKEN_ELSE)) statement();
+
+    // Replace operand with calculated jump offset for truthy jump
+    patchJump(elseJump);
+}
+
 static void printStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "expected \";\" after value");
     emitByte(OP_PRINT);
+}
+
+static void whileStatement() {
+    int loopStart = currentChunk()->count;
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    // Compile condition expression
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+    // Set up falsey jump
+    int exitJump = emitJump(OP_JUMP_IF_FALSE);
+
+    // Stack cleanup
+    emitByte(OP_POP);
+
+    // Compile body
+    statement();
+
+    // Start loop
+    emitLoop(loopStart);
+
+    // Replace operand with calculated jump offset
+    patchJump(exitJump);
+
+    // Pop the condition value from stack for either path
+    emitByte(OP_POP);
 }
 
 static void synchronize() {
@@ -602,6 +801,12 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_FOR)) {
+        forStatement();
+    } else if (match(TOKEN_IF)) {
+        ifStatement(); 
+    } else if (match(TOKEN_WHILE)) {
+        whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         beginScope();
         block();

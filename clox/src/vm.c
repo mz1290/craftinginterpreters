@@ -92,6 +92,9 @@ static InterpretResult run() {
 // index, and looks up the corresponding Value in the chunk’s constant table.
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
+// Reads 2 bytes from chunk and builds a 16-bit unsigned int out of them.
+#define READ_SHORT() (vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
+
 // Reads one-byte operand from the bytecode chunk. Treats that as an index into
 // the chunk’s constant table and returns the string at that index. Does not
 // check that the value is a string — it just indiscriminately casts it since
@@ -242,6 +245,23 @@ static InterpretResult run() {
             printf("\n");
             break;
         }
+        case OP_JUMP: {
+            uint16_t offset = READ_SHORT();
+            vm.ip += offset;
+            break;
+        }
+        case OP_JUMP_IF_FALSE: {
+            uint16_t offset = READ_SHORT();
+            // Check the condition value on top of stack and handle instruction
+            // pointer accordingly with jump offset
+            if (isFalsey(peek(0))) vm.ip += offset;
+            break;
+        }
+        case OP_LOOP: {
+            uint16_t offset = READ_SHORT();
+            vm.ip -= offset;
+            break;
+        }
         case OP_RETURN: {
             // Exit interpreter
             return INTERPRET_OK;
@@ -250,6 +270,7 @@ static InterpretResult run() {
     }
 
 #undef READ_BYTE
+#undef READ_SHORT
 #undef READ_CONSTANT
 #undef READ_STRING
 #undef BINARY_OP
