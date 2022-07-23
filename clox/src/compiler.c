@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "compiler.h"
@@ -44,9 +45,30 @@ typedef struct {
     Precedence precedence;
 } ParseRule;
 
+typedef struct {
+    Token name; // Variable name
+    int depth;  // Scope depth
+} Local;
+
+typedef struct {
+    Local locals[UINT8_COUNT];
+    int localCount;
+    // The number of blocks surrounding the current bit of code being compiled.
+    // 0 = global, 1 = first top level block, 2 = withhin that, 3.. etc
+    // This allows us to keep track of which block each local var belongs to so
+    // that we know which locals to discard when the block ends.
+    int scopeDepth;
+} Compiler;
+
 // Pattern used throughout clox. Using a single global variable allows us to
 // pass the state around from function to function in Compiler.
 Parser parser;
+
+// Not the best implementation, but since we are not doing any concurrent
+// features it gets the job dones as a Global. A better appraoch would be to
+// have each function receive a pointer to it's compiler.
+Compiler* current = NULL;
+
 Chunk* compilingChunk;
 
 static Chunk* currentChunk() {
@@ -160,6 +182,12 @@ static void emitConstant(Value value) {
     emitBytes(OP_CONSTANT, makeConstant(value));
 }
 
+static void initCompiler(Compiler* compiler) {
+    compiler->localCount = 0;
+    compiler->scopeDepth = 0;
+    current = compiler;
+}
+
 static void endCompiler() {
     emitReturn();
 
@@ -173,6 +201,20 @@ static void endCompiler() {
 //        disassembleChunk(currentChunk(), "code");
 //    }
 //#endif
+}
+
+static void beginScope() {
+    current->scopeDepth++;
+}
+
+static void endScope() {
+    current->scopeDepth--;
+
+    while (current->localCount > 0 &&
+        current->locals[current->localCount - 1].depth > current->scopeDepth) {
+        emitByte(OP_POP); // Tell the VM to remove values from stack at runtime
+        current->localCount--;
+    }
 }
 
 // These forward declaration enable clox's grammar recursive nature. For example
@@ -191,12 +233,101 @@ static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
+// Check if two identifiers are equal
+static bool identifiersEqual(Token* a, Token* b) {
+    if (a->length != b->length) return false;
+    return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static int resolveLocal(Compiler* compiler, Token* name) {
+    // We always walk backwards because it ensures we enforce the *shadowing*
+    // feature of Lox. Multiple variables of the same name can exist in the
+    // surrounding scopes, but we only care about the last one.
+    for (int i = compiler->localCount - 1; i >= 0; i--) {
+        Local* local = &compiler->locals[i];
+
+        if (identifiersEqual(name, &local->name)) {
+            // Verify that the variable has been fully defined
+            if (local->depth == -1) {
+                error("can't read local variable in its own initializer");
+            }
+
+            return i;
+        }
+    }
+
+    // Local not found, must be global
+    return -1;
+}
+
+static void addLocal(Token name) {
+    // VM can only support up to 256 local variables in a given scope
+    if (current->localCount == UINT8_COUNT) {
+        error("too many local variables in function");
+        return;
+    }
+
+    // Initialize the next available Local in the compiler’s array of variables
+    Local* local = &current->locals[current->localCount++];
+
+    local->name = name;
+
+    // Signals that the variable is *currently* uninitialized. Once the variable
+    // initializer gets compiled, this value will change.
+    local->depth = -1;
+}
+
+// This is how the compiler recognizes the existence of local variables. If
+// global, then we return immediately.
+static void declareVariable() {
+    if (current->scopeDepth == 0) return;
+
+    Token* name = &parser.previous;
+
+    // Check for invalid redclarations of same variable name
+    for (int i = current->localCount - 1; i >= 0; i--) {
+        Local* local = &current->locals[i];
+
+        // If we reach the beginning of the locals array OR encounter a variable
+        // owned by a different scope, we know we've check all existing
+        // variables in the current scope, exit.
+        if (local->depth != -1 && local->depth < current->scopeDepth) {
+            break; 
+        }
+
+        if (identifiersEqual(name, &local->name)) {
+            error("already a variable with this name in this scope");
+        }
+    }
+
+    addLocal(*name);
+}
+
 static uint8_t parseVariable(const char* errorMessage) {
     consume(TOKEN_IDENTIFIER, errorMessage);
+
+    declareVariable();
+    // If the variable is local (>0) then return a dummy index since we don't
+    // nstore local variable names in our constant table.
+    if (current->scopeDepth > 0) return 0;
+
     return identifierConstant(&parser.previous);
 }
 
+static void markInitialized() {
+    current->locals[current->localCount - 1].depth = current->scopeDepth;
+}
+
+// This is where the compiler recognizes that a variable is available for use.
 static void defineVariable(uint8_t global) {
+    // We leverage the VM's stack to deal with local variables. If the variable
+    // is local scope, don't do anything. The value we need is sitting at the
+    // top of the VM stack.
+    if (current->scopeDepth > 0) {
+        markInitialized();
+        return;
+    }
+
     emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
@@ -256,13 +387,27 @@ static void string(bool canAssign) {
 // Takes the given identifier token and adds it's lexeme to the chunk’s constant
 // table as a string.
 static void namedVariable(Token name, bool canAssign) {
-    uint8_t arg = identifierConstant(&name);
+    uint8_t getOp, setOp;
+
+    // Try to find local varible with given name
+    int arg = resolveLocal(current, &name);
+
+    if (arg != -1) {
+        // We found a local variable
+        getOp = OP_GET_LOCAL;
+        setOp = OP_SET_LOCAL;
+    } else {
+        // We found a global variable
+        arg = identifierConstant(&name);
+        getOp = OP_GET_GLOBAL;
+        setOp = OP_SET_GLOBAL;
+    }
 
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
-        emitBytes(OP_SET_GLOBAL, arg);
+        emitBytes(setOp, (uint8_t)arg);
     } else {
-        emitBytes(OP_GET_GLOBAL, arg);
+        emitBytes(getOp, (uint8_t)arg);
     }
 }
 
@@ -377,6 +522,23 @@ static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+static void block() {
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        declaration();
+    }
+
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+}
+
+// Variable declaration parsing begins in varDeclaration().
+//
+// First, parseVariable() consumes the identifier token for the variable name,
+// adds its lexeme to the chunk’s constant table as a string, and then returns
+// the constant table index where it was added.
+// 
+// Second, after varDeclaration() compiles the initializer, it calls
+// defineVariable() to emit the bytecode for storing the variable’s value in
+// the global variable hash table.
 static void varDeclaration() {
     uint8_t global = parseVariable("expected variable name");
 
@@ -440,6 +602,10 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_LEFT_BRACE)) {
+        beginScope();
+        block();
+        endScope();
     } else {
         expressionStatement();
     }
@@ -447,6 +613,8 @@ static void statement() {
 
 bool compile(const char* source, Chunk* chunk) {
     initScanner(source);
+    Compiler compiler;
+    initCompiler(&compiler);
     compilingChunk = chunk;
 
     // Initialize compiler panic settings

@@ -38,7 +38,7 @@ void freeVM();
 InterpretResult interpret(const char*);
 
 // Stack operations
-void push(Value value);
+void push(Value);
 Value pop();
 
 #endif

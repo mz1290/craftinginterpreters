@@ -160,6 +160,20 @@ static InterpretResult run() {
         case OP_TRUE:     push(BOOL_VAL(true)); break;
         case OP_FALSE:    push(BOOL_VAL(false)); break;
         case OP_POP:      pop(); break;
+        case OP_GET_LOCAL: {
+            uint8_t slot = READ_BYTE();
+            push(vm.stack[slot]); 
+            break;
+        }
+        case OP_SET_LOCAL: {
+            uint8_t slot = READ_BYTE();
+            vm.stack[slot] = peek(0);
+            // Note that we do not pop the value from the VM stack. Assignment
+            // is an expression so it must produce a value. The value of an
+            // assginment *is* the assigned value, so the VM just leaves the
+            // original value on the stack.
+            break;
+        }
         case OP_GET_GLOBAL: {
             ObjString* name = READ_STRING();
             Value value;
