@@ -16,15 +16,16 @@ static void resetStack() {
 }
 
 static void runtimeError(const char* format, ...) {
+    size_t instruction = vm.ip - vm.chunk->code - 1;
+    int line = vm.chunk->lines[instruction];
+    fprintf(stderr, "[line %d] RuntimeError: ", line);
+
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
     fputs("\n", stderr);
 
-    size_t instruction = vm.ip - vm.chunk->code - 1;
-    int line = vm.chunk->lines[instruction];
-    fprintf(stderr, "[line %d] in script\n", line);
     resetStack();
 }
 
