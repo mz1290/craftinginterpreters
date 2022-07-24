@@ -5,6 +5,6 @@
 #include "vm.h"
 
 
-bool compile(const char*, Chunk*);
+ObjFunction* compile(const char*);
 
 #endif
