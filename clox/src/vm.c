@@ -26,7 +26,7 @@ static void runtimeError(const char* format, ...) {
     // previous *failed* instruction.
     for (int i = vm.frameCount - 1; i >= 0; i--) {
         CallFrame* frame = &vm.frames[i];
-        ObjFunction* function = frame->function;
+        ObjFunction* function = frame->closure->function;
         size_t instruction = frame->ip - function->chunk.code - 1;
         fprintf(stderr, "[line %d] RuntimeError: ",
             function->chunk.lines[instruction]);
@@ -92,10 +92,10 @@ static Value peek(int distance) {
     return vm.stackTop[-1 - distance];
 }
 
-static bool call(ObjFunction* function, int argCount) {
-    if (argCount != function->arity) {
-        runtimeError("expected %d arguments but got %d", function->arity,
-            argCount);
+static bool call(ObjClosure* closure, int argCount) {
+    if (argCount != closure->function->arity) {
+        runtimeError("expected %d arguments but got %d",
+            closure->function->arity, argCount);
         return false;
     }
 
@@ -105,8 +105,8 @@ static bool call(ObjFunction* function, int argCount) {
     }
 
     CallFrame* frame = &vm.frames[vm.frameCount++];
-    frame->function = function;
-    frame->ip = function->chunk.code;
+    frame->closure = closure;
+    frame->ip = closure->function->chunk.code;
     frame->slots = vm.stackTop - argCount - 1;
     return true;
 }
@@ -114,8 +114,8 @@ static bool call(ObjFunction* function, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
-        case OBJ_FUNCTION: 
-            return call(AS_FUNCTION(callee), argCount);
+        case OBJ_CLOSURE: // by default we treat all functions as closures
+            return call(AS_CLOSURE(callee), argCount);
         case OBJ_NATIVE: {
             NativeFn native = AS_NATIVE(callee);
             Value result = native(argCount, vm.stackTop - argCount);
@@ -164,7 +164,7 @@ static InterpretResult run() {
 
 // Reads the next byte from the bytecode, treats the resulting number as an
 // index, and looks up the corresponding Value in the chunk’s constant table.
-#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 
 // Reads one-byte operand from the bytecode chunk. Treats that as an index into
 // the chunk’s constant table and returns the string at that index. Does not
@@ -202,8 +202,8 @@ static InterpretResult run() {
 
             // disassembleInstruction expects an integer byte offset, we must
             // convert ip back to a relative offset.
-            disassembleInstruction(&frame->function->chunk,
-                (int)(frame->ip - frame->function->chunk.code));
+            disassembleInstruction(&frame->closure->function->chunk,
+                (int)(frame->ip - frame->closure->function->chunk.code));
         }
 /*
 #ifdef DEBUG_TRACE_EXECUTION
@@ -342,6 +342,12 @@ static InterpretResult run() {
             frame = &vm.frames[vm.frameCount - 1];
             break;
         }
+        case OP_CLOSURE: {
+            ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
+            ObjClosure* closure = newClosure(function);
+            push(OBJ_VAL(closure));
+            break;
+        }
         case OP_RETURN: {
             Value result = pop();
             vm.frameCount--;
@@ -380,7 +386,10 @@ InterpretResult interpret(const char* source) {
     push(OBJ_VAL(function));
 
     // Set up call frame to execute object function instructions
-    call(function, 0);
+    ObjClosure* closure = newClosure(function);
+    pop();
+    push(OBJ_VAL(closure));
+    call(closure, 0);
 
     return run();
 }

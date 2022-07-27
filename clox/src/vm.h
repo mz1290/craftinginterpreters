@@ -12,8 +12,8 @@
 
 // A call fram represents a single ongoing function call
 typedef struct {
-    // Pointer to function being called
-    ObjFunction* function;
+    // Pointer to clousre, containing the function, being called
+    ObjClosure* closure;
 
     // IP for VM to return to upon function completion
     uint8_t*     ip;

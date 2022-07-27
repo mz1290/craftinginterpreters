@@ -40,15 +40,20 @@ typedef enum {
 typedef void (*ParseFn)(bool);
 
 typedef struct {
-    ParseFn prefix;
-    ParseFn infix;
+    ParseFn    prefix;
+    ParseFn    infix;
     Precedence precedence;
 } ParseRule;
 
 typedef struct {
     Token name; // Variable name
-    int depth;  // Scope depth
+    int   depth;  // Scope depth
 } Local;
+
+typedef struct {
+    uint8_t index;
+    bool    isLocal;
+} Upvalue;
 
 typedef enum {
     TYPE_FUNCTION,
@@ -65,6 +70,12 @@ typedef struct Compiler {
 
     Local locals[UINT8_COUNT];
     int localCount;
+
+    // Array of upvalue structures to track the closed-over identifiers that it
+    // has resolved in the body of each function. The indexes match the indexes
+    // where upvalues will live in the ObjClosure at runtime.
+    Upvalue upvalues[UINT8_COUNT];
+
     // The number of blocks surrounding the current bit of code being compiled.
     // 0 = global, 1 = first top level block, 2 = withhin that, 3.. etc
     // This allows us to keep track of which block each local var belongs to so
@@ -338,6 +349,51 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     return -1;
 }
 
+static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
+    int upvalueCount = compiler->function->upvalueCount;
+
+    // Before adding a new upvalue, first check to see if the function already
+    // has an upvalue that closes over that variable
+    for (int i = 0; i < upvalueCount; i++) {
+        Upvalue* upvalue = &compiler->upvalues[i];
+
+        if (upvalue->index == index && upvalue->isLocal == isLocal) {
+        return i;
+        }
+    }
+
+    // Verify that we can add upvalue without overflowing
+    if (upvalueCount == UINT8_COUNT) {
+        error("too many closure variables in function");
+        return 0;
+    }
+
+    compiler->upvalues[upvalueCount].isLocal = isLocal;
+    compiler->upvalues[upvalueCount].index = index;
+
+    // Return the index of the created upvalue in the function’s upvalue list
+    return compiler->function->upvalueCount++;
+}
+
+static int resolveUpvalue(Compiler* compiler, Token* name) {
+    if (compiler->enclosing == NULL) return -1;
+
+    // Base case: finding matching local variable in enclosing function
+    int local = resolveLocal(compiler->enclosing, name);
+    if (local != -1) {
+        return addUpvalue(compiler, (uint8_t)local, true);
+    }
+
+    // Recursive case: search for matching local variable *beyond* the current
+    // enclosing function.
+    int upvalue = resolveUpvalue(compiler->enclosing, name);
+    if (upvalue != -1) {
+        return addUpvalue(compiler, (uint8_t)upvalue, false);
+    }
+
+    return -1;
+}
+
 static void addLocal(Token name) {
     // VM can only support up to 256 local variables in a given scope
     if (current->localCount == UINT8_COUNT) {
@@ -521,6 +577,9 @@ static void namedVariable(Token name, bool canAssign) {
         // We found a local variable
         getOp = OP_GET_LOCAL;
         setOp = OP_SET_LOCAL;
+    } else if ((arg = resolveUpvalue(current, &name)) != -1) {
+        getOp = OP_GET_UPVALUE;
+        setOp = OP_SET_UPVALUE;
     } else {
         // We found a global variable
         arg = identifierConstant(&name);
@@ -678,7 +737,22 @@ static void function(FunctionType type) {
     block();
 
     ObjFunction* function = endCompiler();
-    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+
+    // Instruction that tells the VM to wrap the function in a closure object
+    emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
+
+    // OP_CLOSURE instruction uses variably sized encoding. For each upvalue the
+    // closure captures, there are two single-byte operands. Each pair of
+    // operands specifies what that upvalue captures:
+    // 1. If the first byte is one, it captures a local variable in the
+    //    enclosing function.
+    // 2. If zero, it captures one of the function’s upvalues.
+    // 
+    // The second byte is the local slot or upvalue index to capture.
+    for (int i = 0; i < function->upvalueCount; i++) {
+        emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
+        emitByte(compiler.upvalues[i].index);
+    }
 }
 
 static void funDeclaration() {
