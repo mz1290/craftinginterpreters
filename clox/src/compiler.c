@@ -48,6 +48,7 @@ typedef struct {
 typedef struct {
     Token name; // Variable name
     int   depth;  // Scope depth
+    bool  isCaptured;
 } Local;
 
 typedef struct {
@@ -268,6 +269,7 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
 
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
+    local->isCaptured = false;
     local->name.start = "";
     local->name.length = 0;
 }
@@ -301,7 +303,15 @@ static void endScope() {
 
     while (current->localCount > 0 &&
         current->locals[current->localCount - 1].depth > current->scopeDepth) {
-        emitByte(OP_POP); // Tell the VM to remove values from stack at runtime
+
+        if (current->locals[current->localCount - 1].isCaptured) {
+            // Local is captured, move to heap
+            emitByte(OP_CLOSE_UPVALUE);
+        } else {
+            // Tell the VM to remove values from stack at runtime
+            emitByte(OP_POP);
+        }
+
         current->localCount--;
     }
 }
@@ -381,6 +391,7 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
     // Base case: finding matching local variable in enclosing function
     int local = resolveLocal(compiler->enclosing, name);
     if (local != -1) {
+        compiler->enclosing->locals[local].isCaptured = true;
         return addUpvalue(compiler, (uint8_t)local, true);
     }
 
@@ -409,6 +420,9 @@ static void addLocal(Token name) {
     // Signals that the variable is *currently* uninitialized. Once the variable
     // initializer gets compiled, this value will change.
     local->depth = -1;
+
+    // Initially all locals are not captured for closures
+    local->isCaptured = false;
 }
 
 // This is how the compiler recognizes the existence of local variables. If

@@ -25,16 +25,17 @@ typedef struct {
 
 typedef struct {
     // We access each function's byte code chunk through it's call frame.
-    CallFrame frames[FRAMES_MAX];
+    CallFrame   frames[FRAMES_MAX];
 
     // Height of the call frame stack
-    int       frameCount;
+    int         frameCount;
 
-    Value     stack[STACK_MAX];
-    Value*    stackTop;
-    Table     globals;
-    Table     strings;
-    Obj*      objects;
+    Value       stack[STACK_MAX];
+    Value*      stackTop;
+    Table       globals;
+    Table       strings;
+    ObjUpvalue* openUpvalues;
+    Obj*        objects;
 } VM;
 
 // Results the VM will use to handle exiting scenarios
