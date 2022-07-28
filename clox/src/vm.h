@@ -10,7 +10,7 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 
-// A call fram represents a single ongoing function call
+// A call frame represents a single ongoing function call
 typedef struct {
     // Pointer to clousre, containing the function, being called
     ObjClosure* closure;

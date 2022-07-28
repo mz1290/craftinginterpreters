@@ -26,8 +26,7 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     printf("'\n");
 
     // Handle OP_CLOSURE scenarios
-    ObjFunction* function = AS_FUNCTION(
-        chunk->constants.values[constant]);
+    ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
     for (int j = 0; j < function->upvalueCount; j++) {
         int isLocal = chunk->code[offset++];
         int index = chunk->code[offset++];

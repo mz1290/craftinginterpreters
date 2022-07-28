@@ -89,11 +89,9 @@ typedef struct Compiler {
 Parser parser;
 
 // Not the best implementation, but since we are not doing any concurrent
-// features it gets the job dones as a Global. A better appraoch would be to
+// features it gets the job dones as a Global. A better approach would be to
 // have each function receive a pointer to it's compiler.
 Compiler* current = NULL;
-
-Chunk* compilingChunk;
 
 static Chunk* currentChunk() {
     return &current->function->chunk;
