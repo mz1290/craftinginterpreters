@@ -35,7 +35,15 @@ typedef struct {
     Table       globals;
     Table       strings;
     ObjUpvalue* openUpvalues;
+
+    size_t      bytesAllocated;
+    size_t      nextGC;
     Obj*        objects;
+
+    // Garbage collection worklist stack
+    int grayCount;
+    int grayCapacity;
+    Obj** grayStack;
 } VM;
 
 // Results the VM will use to handle exiting scenarios

@@ -41,6 +41,9 @@
 // 4. grow existing     non-zero    > old
 void* reallocate(void*, size_t, size_t);
 
+void markObject(Obj*);
+void markValue(Value);
+void collectGarbage();
 void freeObjects();
 
 #endif

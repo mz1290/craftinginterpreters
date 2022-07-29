@@ -37,4 +37,12 @@ void tableAddAll(Table*, Table*);
 // Check if string exists in master set.
 ObjString* tableFindString(Table*, const char*, int, uint32_t);
 
+// Visit each entry in table and deletes entries that are not marked active.
+// This prevents dangling pointers in the hash table once the occupied string
+// has been garbage collected.
+void tableRemoveWhite(Table* table);
+
+// Garbage collector helper for marking global heap variables
+void markTable(Table* table);
+
 #endif

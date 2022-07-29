@@ -1030,3 +1030,14 @@ ObjFunction* compile(const char* source) {
     // If no errors, return function, else return NULL to vm
     return parser.hadError ? NULL : function;
 }
+
+void markCompilerRoots() {
+    Compiler* compiler = current;
+
+    // The compiler relies on ObjFunctions during compilation. The function
+    // declarations can nest enclosing compilers so we need to traverse that
+    while (compiler != NULL) {
+        markObject((Obj*)compiler->function);
+        compiler = compiler->enclosing;
+    }
+}

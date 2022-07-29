@@ -157,6 +157,8 @@ char* debugFlagOf(DebugFlag df) {
     case DF_SCANNING:   return "scanning"; break;
     case DF_CODE:       return "code"; break;
     case DF_TRACE:      return "trace"; break;
+    case DF_STRESS_GC:  return "stress_gc"; break;
+    case DF_LOG_GC:     return "log_gc"; break;
     default:            return "";
     }
 }
@@ -180,6 +182,10 @@ void SetDebug(char* settings) {
         } else if (strcmp(setting, debugFlagOf(DF_TRACE)) == 0) {
             //printf("enabling debug trace output\n");
             DEBUG_LOX |= DF_TRACE;
+        } else if (strcmp(setting, debugFlagOf(DF_STRESS_GC)) == 0) {
+            DEBUG_LOX |= DF_STRESS_GC;
+        } else if (strcmp(setting, debugFlagOf(DF_LOG_GC)) == 0) {
+            DEBUG_LOX |= DF_LOG_GC;
         }
     
         // Advance to next setting
