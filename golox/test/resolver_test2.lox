@@ -1,5 +1,0 @@
-var a = "outer";
-{
-  print a;
-  var a = "inner";
-}
