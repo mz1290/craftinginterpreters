@@ -258,22 +258,6 @@ static InterpretResult run() {
             disassembleInstruction(&frame->closure->function->chunk,
                 (int)(frame->ip - frame->closure->function->chunk.code));
         }
-/*
-#ifdef DEBUG_TRACE_EXECUTION
-    // Show the current contents of VM stack
-    printf("          ");
-    for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
-      printf("[ ");
-      printValue(*slot);
-      printf(" ]");
-    }
-    printf("\n");
-
-    // disassembleInstruction expects an integer byte offset, we must convert ip
-    // back to a relative offset.
-    disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
-#endif
-*/
 
         uint8_t instruction;
 
@@ -336,6 +320,64 @@ static InterpretResult run() {
         case OP_SET_UPVALUE: {
             uint8_t slot = READ_BYTE();
             *frame->closure->upvalues[slot]->location = peek(0);
+            break;
+        }
+        case OP_GET_PROPERTY: {
+            if (!IS_INSTANCE(peek(0))) {
+                runtimeError("only instances have properties");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+
+            // Left expression has already been executed and resulting instance
+            // is on top of the stack. Get it here.
+            ObjInstance* instance = AS_INSTANCE(peek(0));
+
+            // Get the field name from the constant pool
+            ObjString* name = READ_STRING();
+
+            // Look up field in instance's field table
+            Value value;
+            if (tableGet(&instance->fields, name, &value)) {
+                // Found the field, pop the instance
+                pop();
+
+                // Push the found value on stack as result
+                push(value);
+                break;
+            }
+
+            // Field does not exist in instance
+            runtimeError("undefined property \"%s\"", name->chars);
+            return INTERPRET_RUNTIME_ERROR;
+        }
+        case OP_SET_PROPERTY: {
+            if (!IS_INSTANCE(peek(1))) {
+                runtimeError("only instances have fields");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+
+            // The state of the stack:
+            // Top   = value to be stored as field
+            // Top-1 = instance whose field is being set
+
+            // Get the instance from stack
+            ObjInstance* instance = AS_INSTANCE(peek(1));
+
+            // Get the field name from the constant pool
+            ObjString* name = READ_STRING();
+
+            // Store value from top of stack into the instance's field table
+            tableSet(&instance->fields, name, peek(0));
+
+            // Pop stored value from top of stack
+            Value value = pop();
+
+            // Pop the instance
+            pop();
+
+            // Push value back on stack as top. Basically, we removed the second
+            // stack element.
+            push(value);
             break;
         }
         case OP_EQUAL: {
