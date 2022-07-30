@@ -188,7 +188,7 @@ void tableRemoveWhite(Table* table) {
 }
 
 void markTable(Table* table) {
-    // walk the globals array and mark each value AND key string
+    // walk the array and mark each value AND key string
     for (int i = 0; i < table->capacity; i++) {
         Entry* entry = &table->entries[i];
         markObject((Obj*)entry->key);
