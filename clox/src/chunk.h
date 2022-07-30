@@ -38,6 +38,7 @@ typedef enum {
     OP_CLOSURE,
     OP_CLOSE_UPVALUE,
     OP_RETURN,
+    OP_CLASS,
 } OpCode;
 
 // Chunk is the data structure used to store data with instructions.

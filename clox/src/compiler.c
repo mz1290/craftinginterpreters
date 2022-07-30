@@ -767,6 +767,26 @@ static void function(FunctionType type) {
     }
 }
 
+static void classDeclaration() {
+    consume(TOKEN_IDENTIFIER, "expected class name");
+
+    // Store name string in constant table for later use
+    uint8_t nameConstant = identifierConstant(&parser.previous);
+
+    // Bind class object to a variable with same name
+    declareVariable();
+
+    // Tell vm to create the class object at runtime with constant table index
+    // where class name string was stored
+    emitBytes(OP_CLASS, nameConstant);
+
+    // Define the variable for class name so vm knows the variabel can be used
+    defineVariable(nameConstant);
+
+    consume(TOKEN_LEFT_BRACE, "expected \"{\" before class body");
+    consume(TOKEN_RIGHT_BRACE, "expected \"}\" after class body");
+}
+
 static void funDeclaration() {
     uint8_t global = parseVariable("expected function name");
     markInitialized();
@@ -978,7 +998,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_FUN)) {
+    if (match(TOKEN_CLASS)) {
+        classDeclaration();
+    } else if (match(TOKEN_FUN)) {
         funDeclaration();
     } else if (match(TOKEN_VAR)) {
         varDeclaration();

@@ -7,11 +7,13 @@
 
 #define OBJ_TYPE(value)        (AS_OBJ(value)->type)
 
+#define IS_CLASS(value)        isObjType(value, OBJ_CLASS)
 #define IS_CLOSURE(value)      isObjType(value, OBJ_CLOSURE)
 #define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
 #define IS_NATIVE(value)       isObjType(value, OBJ_NATIVE)
 #define IS_STRING(value)       isObjType(value, OBJ_STRING)
 
+#define AS_CLASS(value)        ((ObjClass*)AS_OBJ(value))
 #define AS_CLOSURE(value)      ((ObjClosure*)AS_OBJ(value))
 // Take a Value that is expected to contain a pointer to a valid ObjString on
 // the heap. AS_STRING return the ObjString pointer and the AS_CSTRING returns
@@ -22,6 +24,7 @@
 #define AS_CSTRING(value)      (((ObjString*)AS_OBJ(value))->chars)
 
 typedef enum {
+    OBJ_CLASS,
     OBJ_CLOSURE,
     OBJ_FUNCTION,
     OBJ_NATIVE,
@@ -50,7 +53,6 @@ typedef struct {
     NativeFn function;
 } ObjNative;
 
-
 struct ObjString {
     Obj      obj; // provides required state to be an "Obj"
     int      length;
@@ -69,9 +71,15 @@ typedef struct {
     Obj          obj;
     ObjFunction* function;
     ObjUpvalue** upvalues;
-    int upvalueCount;
+    int          upvalueCount;
 } ObjClosure;
 
+typedef struct {
+    Obj obj;
+    ObjString* name;
+} ObjClass;
+
+ObjClass* newClass(ObjString*);
 ObjClosure* newClosure(ObjFunction*);
 ObjFunction* newFunction();
 ObjNative* newNative(NativeFn);

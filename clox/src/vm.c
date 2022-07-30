@@ -440,6 +440,11 @@ static InterpretResult run() {
             frame = &vm.frames[vm.frameCount - 1];
             break;
         }
+        case OP_CLASS:
+            // Load class name string from constant table and use to create new
+            // class object with given name
+            push(OBJ_VAL(newClass(READ_STRING())));
+            break;
         }
     }
 
