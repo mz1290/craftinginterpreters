@@ -123,6 +123,15 @@ static bool callValue(Value callee, int argCount) {
         switch (OBJ_TYPE(callee)) {
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+            // Top of the stack will contain all of the method args. Directly
+            // under the args is the closure of the called method. Within that
+            // closure is how we can access "slot zero" in the call frame and
+            // update its value to be the receiver. The -argcount and -1 is
+            // pointer arithmetic since stackTop is a pointer to an array
+            // element itself. -argcount lets us skip past all the arguments and
+            // then -1 adjusts for stackTop pointing to 1 past the last used
+            // stack slot.
+            vm.stackTop[-argCount - 1] = bound->receiver;
             return call(bound->method, argCount);
         }
         case OBJ_CLASS: {

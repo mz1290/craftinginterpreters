@@ -58,6 +58,7 @@ typedef struct {
 
 typedef enum {
     TYPE_FUNCTION,
+    TYPE_METHOD,
     TYPE_SCRIPT
 } FunctionType;
 
@@ -70,7 +71,7 @@ typedef struct Compiler {
     FunctionType type;
 
     Local locals[UINT8_COUNT];
-    int localCount;
+    int   localCount;
 
     // Array of upvalue structures to track the closed-over identifiers that it
     // has resolved in the body of each function. The indexes match the indexes
@@ -84,6 +85,10 @@ typedef struct Compiler {
     int scopeDepth;
 } Compiler;
 
+typedef struct ClassCompiler {
+    struct ClassCompiler* enclosing;
+} ClassCompiler;
+
 // Pattern used throughout clox. Using a single global variable allows us to
 // pass the state around from function to function in Compiler.
 Parser parser;
@@ -92,6 +97,10 @@ Parser parser;
 // features it gets the job dones as a Global. A better approach would be to
 // have each function receive a pointer to it's compiler.
 Compiler* current = NULL;
+
+// This module variable points to a struct representing the current, innermost
+// class being compiled
+ClassCompiler* currentClass = NULL;
 
 static Chunk* currentChunk() {
     return &current->function->chunk;
@@ -268,8 +277,15 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    local->name.start = "";
-    local->name.length = 0;
+
+    // Handle compiling behavior for function vs method
+    if (type != TYPE_FUNCTION) {
+        local->name.start = "this";
+        local->name.length = 4;
+    } else {
+        local->name.start = "";
+        local->name.length = 0;
+    }
 }
 
 static ObjFunction* endCompiler() {
@@ -645,6 +661,16 @@ static void unary(bool canAssign) {
     }
 }
 
+static void this_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("can't use \"this\" outside of a class");
+        return;
+     }
+
+    variable(false);
+} 
+
+// Parser table
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]    = {grouping, call,   PREC_CALL},
     [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
@@ -680,7 +706,7 @@ ParseRule rules[] = {
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},
     [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
     [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},
@@ -792,7 +818,7 @@ static void method() {
     uint8_t constant = identifierConstant(&parser.previous);
 
     // Method body
-    FunctionType type = TYPE_FUNCTION;
+    FunctionType type = TYPE_METHOD;
     function(type);
 
     emitBytes(OP_METHOD, constant);
@@ -815,6 +841,12 @@ static void classDeclaration() {
     // Define the variable for class name so vm knows the variabel can be used
     defineVariable(nameConstant);
 
+    // When compiling a class, push a new ClassCompiler onto that implicit
+    // linked stack.
+    ClassCompiler classCompiler;
+    classCompiler.enclosing = currentClass;
+    currentClass = &classCompiler;
+
     // Generate code to load a variable with the given name onto the stack
     namedVariable(className, false);
 
@@ -828,6 +860,9 @@ static void classDeclaration() {
     // We have a class with a nicely populated method table. We can now pop the
     // class from the top of stack
     emitByte(OP_POP);
+
+    // Pop temporary class and restore the enclosing class
+    currentClass = currentClass->enclosing;
 }
 
 static void funDeclaration() {
