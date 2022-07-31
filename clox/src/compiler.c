@@ -567,6 +567,12 @@ static void dot(bool canAssign) {
 
         // Set property with name from constant table
         emitBytes(OP_SET_PROPERTY, name);
+    } else if (match(TOKEN_LEFT_PAREN)) {
+        // Optimized invocations (two operands: property name and num of args)
+        // Replaces OP_GET_PROPERTY and OP_CALL when called together
+        uint8_t argCount = argumentList();
+        emitBytes(OP_INVOKE, name);
+        emitByte(argCount);
     } else {
         // We have a getter
         emitBytes(OP_GET_PROPERTY, name);
