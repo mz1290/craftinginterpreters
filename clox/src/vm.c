@@ -121,6 +121,10 @@ static bool call(ObjClosure* closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+        case OBJ_BOUND_METHOD: {
+            ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+            return call(bound->method, argCount);
+        }
         case OBJ_CLASS: {
             ObjClass* klass = AS_CLASS(callee);
             vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
@@ -142,6 +146,25 @@ static bool callValue(Value callee, int argCount) {
 
     runtimeError("can only call functions and classes");
     return false;
+}
+
+static bool bindMethod(ObjClass* klass, ObjString* name) {
+    Value method;
+
+    // Check class's method table for a name match
+    if (!tableGet(&klass->methods, name, &method)) {
+        runtimeError("undefined property \"%s\"", name->chars);
+        return false;
+    }
+
+    // Method found for name, wrap method in ObjBoundMethod
+    ObjBoundMethod* bound = newBoundMethod(peek(0), AS_CLOSURE(method));
+
+    // Remove the instance from top of stack and replace with the bound method
+    pop();
+    push(OBJ_VAL(bound));
+
+    return true;
 }
 
 static ObjUpvalue* captureUpvalue(Value* local) {
@@ -181,6 +204,20 @@ static void closeUpvalues(Value* last) {
 
         vm.openUpvalues = upvalue->next;
     }
+}
+
+static void defineMethod(ObjString* name) {
+    // Get the method closure from top of stack
+    Value method = peek(0);
+
+    // Get the class the method will be bound to (second from top of stack)
+    ObjClass* klass = AS_CLASS(peek(1));
+
+    // Store the closure in the class's method table
+    tableSet(&klass->methods, name, method);
+
+    // Remove the closure from the stack
+    pop();
 }
 
 static bool isFalsey(Value value) {
@@ -346,9 +383,14 @@ static InterpretResult run() {
                 break;
             }
 
-            // Field does not exist in instance
-            runtimeError("undefined property \"%s\"", name->chars);
-            return INTERPRET_RUNTIME_ERROR;
+            // No field with provided property name was found. Check if name
+            // refers to a method.
+            if (!bindMethod(instance->klass, name)) {
+                // Field does not exist in instance
+                return INTERPRET_RUNTIME_ERROR;
+            }
+
+            break;
         }
         case OP_SET_PROPERTY: {
             if (!IS_INSTANCE(peek(1))) {
@@ -491,6 +533,9 @@ static InterpretResult run() {
             // Load class name string from constant table and use to create new
             // class object with given name
             push(OBJ_VAL(newClass(READ_STRING())));
+            break;
+        case OP_METHOD:
+            defineMethod(READ_STRING());
             break;
         }
     }

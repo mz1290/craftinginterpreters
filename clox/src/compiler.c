@@ -786,8 +786,21 @@ static void function(FunctionType type) {
     }
 }
 
+static void method() {
+    // Store method name in constant table for later use in runtime
+    consume(TOKEN_IDENTIFIER, "expected method name");
+    uint8_t constant = identifierConstant(&parser.previous);
+
+    // Method body
+    FunctionType type = TYPE_FUNCTION;
+    function(type);
+
+    emitBytes(OP_METHOD, constant);
+}
+
 static void classDeclaration() {
     consume(TOKEN_IDENTIFIER, "expected class name");
+    Token className = parser.previous;
 
     // Store name string in constant table for later use
     uint8_t nameConstant = identifierConstant(&parser.previous);
@@ -802,8 +815,19 @@ static void classDeclaration() {
     // Define the variable for class name so vm knows the variabel can be used
     defineVariable(nameConstant);
 
+    // Generate code to load a variable with the given name onto the stack
+    namedVariable(className, false);
+
     consume(TOKEN_LEFT_BRACE, "expected \"{\" before class body");
+    // Compile class methods
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
     consume(TOKEN_RIGHT_BRACE, "expected \"}\" after class body");
+
+    // We have a class with a nicely populated method table. We can now pop the
+    // class from the top of stack
+    emitByte(OP_POP);
 }
 
 static void funDeclaration() {

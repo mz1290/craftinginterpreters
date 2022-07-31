@@ -23,6 +23,10 @@ typedef struct {
     Value*       slots;
 } CallFrame;
 
+// Bytecode VM architecture for state:
+// - Local variables and temporaries are on the stack
+// - Globals are in a hash table
+// - Variables in closures use upvalues
 typedef struct {
     // We access each function's byte code chunk through it's call frame.
     CallFrame   frames[FRAMES_MAX];
