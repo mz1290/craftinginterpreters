@@ -194,6 +194,9 @@ static void markRoots() {
 
     // Traverse roots the compiler uses
     markCompilerRoots();
+
+    // Keep the VM's object initializer intern string alive
+    markObject((Obj*)vm.initString);
 }
 
 static void traceReferences() {
