@@ -58,7 +58,7 @@ func TestThisAtTopLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] error at "this": can't use 'this' outside of a class`
+	expected := `[line 1] error at "this": can't use "this" outside of a class`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -87,7 +87,7 @@ func TestThisInTopLevelFunction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 2] error at "this": can't use 'this' outside of a class`
+	expected := `[line 2] error at "this": can't use "this" outside of a class`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

@@ -421,7 +421,7 @@ func TestUndefined(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 4] RuntimeError: undefined variable property "bar"`
+	expected := `[line 4] RuntimeError: undefined property "bar"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

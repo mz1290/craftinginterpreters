@@ -591,7 +591,7 @@ static void literal(bool canAssign) {
 // Assumes the initial '(' has already been consumed.
 static void grouping(bool canAssign) {
     expression();
-    consume(TOKEN_RIGHT_PAREN, "expected ')' after expression");
+    consume(TOKEN_RIGHT_PAREN, "expected \")\" after expression");
 }
 
 // Assumes the number literal has already been consumed and is store in Compiler
@@ -794,7 +794,7 @@ static void function(FunctionType type) {
         do {
             current->function->arity++;
             if (current->function->arity > 255) {
-                errorAtCurrent("can't have more than 255 parameters.");
+                errorAtCurrent("can't have more than 255 parameters");
             }
             uint8_t constant = parseVariable("expected parameter name");
             defineVariable(constant);
@@ -925,7 +925,7 @@ static void forStatement() {
     // Start scope for variables tied to loop body
     beginScope();
 
-    consume(TOKEN_LEFT_PAREN, "expected '(' after \"for\"");
+    consume(TOKEN_LEFT_PAREN, "expected \"(\" after \"for\"");
 
     // Initializer clause
     if (match(TOKEN_SEMICOLON)) {

@@ -180,7 +180,7 @@ func TestParenthesized(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 8] error at ")": expected '.' after 'super'`
+	expected := `[line 8] error at ")": expected "." after "super"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -275,7 +275,7 @@ func TestSuperWithoutDot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 6] error at ";": expected '.' after 'super'`
+	expected := `[line 6] error at ";": expected "." after "super"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

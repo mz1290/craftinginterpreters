@@ -24,7 +24,7 @@ func TestBodyMustBeBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] error at "123": expected '{' before "function" body`
+	expected := `[line 3] error at "123": expected "{" before function body`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -117,7 +117,7 @@ func TestMissingCommaInParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] error at "c": expected ')' after parameters`
+	expected := `[line 3] error at "c": expected ")" after parameters`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

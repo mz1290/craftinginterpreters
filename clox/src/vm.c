@@ -32,11 +32,13 @@ static void runtimeError(const char* format, ...) {
         fprintf(stderr, "[line %d] RuntimeError: ",
             function->chunk.lines[instruction]);
 
+/*
         if (function->name == NULL) {
             fprintf(stderr, "script\n");
         } else {
             fprintf(stderr, "%s()\n", function->name->chars);
         }
+*/
     }
 
     va_list args;

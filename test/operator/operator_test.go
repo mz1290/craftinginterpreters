@@ -174,7 +174,7 @@ func TestDivideNonNumNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -192,7 +192,7 @@ func TestDivideNumNonNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -271,7 +271,7 @@ func TestGreaterNonNumNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -289,7 +289,7 @@ func TestGreaterNumNonNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -307,7 +307,7 @@ func TestGreaterOrEqualNonNumNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -325,7 +325,7 @@ func TestGreaterOrEqualNumNonNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -343,7 +343,7 @@ func TestLessNonNumNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -361,7 +361,7 @@ func TestLessNumNonNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -379,7 +379,7 @@ func TestLessOrEqualNonNumNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -397,7 +397,7 @@ func TestLessOrEqualNumNonNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -415,7 +415,7 @@ func TestMultiplyNonNumNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -433,7 +433,7 @@ func TestMultiplyNumNonNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -531,7 +531,7 @@ func TestSubtractNonNumNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -549,7 +549,7 @@ func TestSubtractNumNonNum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] RuntimeError: operands must be a numbers`
+	expected := `[line 1] RuntimeError: operands must be numbers`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

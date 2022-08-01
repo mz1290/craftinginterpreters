@@ -69,7 +69,7 @@ func (p *Parser) statement() ast.Stmt {
 func (p *Parser) forStatement() ast.Stmt {
 	_, ok := p.consume(token.LEFT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected '(' after 'for'")
+		p.NewParserError(p.peek(), "expected \"(\" after \"for\"")
 	}
 
 	var initializer ast.Stmt
@@ -87,7 +87,7 @@ func (p *Parser) forStatement() ast.Stmt {
 	}
 	_, ok = p.consume(token.SEMICOLON)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ';' after loop condition")
+		p.NewParserError(p.peek(), "expected \";\" after loop condition")
 	}
 
 	var increment ast.Expr
@@ -96,7 +96,7 @@ func (p *Parser) forStatement() ast.Stmt {
 	}
 	_, ok = p.consume(token.RIGHT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ')' after for clause")
+		p.NewParserError(p.peek(), "expected \")\" after for clause")
 	}
 
 	body := p.statement()
@@ -125,14 +125,14 @@ func (p *Parser) forStatement() ast.Stmt {
 func (p *Parser) ifStatement() ast.Stmt {
 	_, ok := p.consume(token.LEFT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected '(' after 'if'")
+		p.NewParserError(p.peek(), "expected \"(\" after \"if\"")
 	}
 
 	condition := p.expression()
 
 	_, ok = p.consume(token.RIGHT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ')' after if condition")
+		p.NewParserError(p.peek(), "expected \")\" after if condition")
 	}
 
 	thenBranch := p.statement()
@@ -153,7 +153,7 @@ func (p *Parser) printStatement() ast.Stmt {
 
 	_, ok := p.consume(token.SEMICOLON)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ';' after value")
+		p.NewParserError(p.peek(), "expected \";\" after value")
 	}
 
 	return ast.Print{Expression: value}
@@ -169,7 +169,7 @@ func (p *Parser) returnStatement() ast.Stmt {
 
 	_, ok := p.consume(token.SEMICOLON)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ';' after return value")
+		p.NewParserError(p.peek(), "expected \";\" after return value")
 	}
 
 	return ast.Return{Keyword: keyword, Value: value}
@@ -188,7 +188,7 @@ func (p *Parser) varDeclaration() ast.Stmt {
 
 	_, ok = p.consume(token.SEMICOLON)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ';' after variable declaration")
+		p.NewParserError(p.peek(), "expected \";\" after variable declaration")
 	}
 
 	return ast.Var{Name: name, Initializer: initializer}
@@ -197,14 +197,14 @@ func (p *Parser) varDeclaration() ast.Stmt {
 func (p *Parser) whileStatement() ast.Stmt {
 	_, ok := p.consume(token.LEFT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected '(' after 'while'")
+		p.NewParserError(p.peek(), "expected \"(\" after \"while\"")
 	}
 
 	condition := p.expression()
 
 	_, ok = p.consume(token.RIGHT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ')' after condition")
+		p.NewParserError(p.peek(), "expected \")\" after condition")
 	}
 
 	body := p.statement()
@@ -217,7 +217,7 @@ func (p *Parser) expressionStatement() ast.Stmt {
 
 	_, ok := p.consume(token.SEMICOLON)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ';' after expression")
+		p.NewParserError(p.peek(), "expected \";\" after expression")
 	}
 
 	return ast.Expression{Expression: expr}
@@ -231,7 +231,7 @@ func (p *Parser) function(kind string) ast.Stmt {
 
 	_, ok = p.consume(token.LEFT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), fmt.Sprintf("expected '(' after %q name",
+		p.NewParserError(p.peek(), fmt.Sprintf("expected \"(\" after %q name",
 			kind))
 	}
 
@@ -257,12 +257,12 @@ func (p *Parser) function(kind string) ast.Stmt {
 
 	_, ok = p.consume(token.RIGHT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ')' after parameters")
+		p.NewParserError(p.peek(), "expected \")\" after parameters")
 	}
 
 	_, ok = p.consume(token.LEFT_BRACE)
 	if !ok {
-		p.NewParserError(p.peek(), fmt.Sprintf("expected '{' before %q body",
+		p.NewParserError(p.peek(), fmt.Sprintf("expected \"{\" before %s body",
 			kind))
 	}
 
@@ -279,7 +279,7 @@ func (p *Parser) block() []ast.Stmt {
 
 	_, ok := p.consume(token.RIGHT_BRACE)
 	if !ok {
-		p.NewParserError(p.peek(), "expected '}' after block")
+		p.NewParserError(p.peek(), "expected \"}\" after block")
 	}
 
 	return statements
@@ -381,7 +381,7 @@ func (p *Parser) classDeclaration() ast.Stmt {
 	// Consume the left bracket
 	_, ok = p.consume(token.LEFT_BRACE)
 	if !ok {
-		p.NewParserError(p.peek(), "expected '}' after class body")
+		p.NewParserError(p.peek(), "expected \"}\" after class body")
 	}
 
 	var methods []ast.Function
@@ -391,7 +391,7 @@ func (p *Parser) classDeclaration() ast.Stmt {
 
 	_, ok = p.consume(token.RIGHT_BRACE)
 	if !ok {
-		p.NewParserError(p.peek(), "expected '}' after class body")
+		p.NewParserError(p.peek(), "expected \"}\" after class body")
 	}
 
 	return ast.Class{Name: name, Superclass: superclass, Methods: methods}
@@ -474,7 +474,7 @@ func (p *Parser) finishCall(callee ast.Expr) ast.Expr {
 
 	paren, ok := p.consume(token.RIGHT_PAREN)
 	if !ok {
-		p.NewParserError(p.peek(), "expected ')' after arguments")
+		p.NewParserError(p.peek(), "expected \")\" after arguments")
 	}
 
 	return ast.Call{Callee: callee, Paren: paren, Arguments: arguments}
@@ -489,7 +489,7 @@ func (p *Parser) call() ast.Expr {
 		} else if p.match(token.DOT) {
 			name, ok := p.consume(token.IDENTIFIER)
 			if !ok {
-				p.NewParserError(p.peek(), "expected property name after '.'")
+				p.NewParserError(p.peek(), "expected property name after \".\"")
 			}
 
 			expr = ast.Get{Object: expr, Name: name}
@@ -523,7 +523,7 @@ func (p *Parser) primary() ast.Expr {
 
 		_, ok := p.consume(token.DOT)
 		if !ok {
-			p.NewParserError(p.peek(), "expected '.' after 'super'")
+			p.NewParserError(p.peek(), "expected \".\" after \"super\"")
 		}
 
 		method, ok := p.consume(token.IDENTIFIER)
@@ -546,7 +546,7 @@ func (p *Parser) primary() ast.Expr {
 		expr := p.expression()
 		_, ok := p.consume(token.RIGHT_PAREN)
 		if !ok {
-			p.NewParserError(p.peek(), "expected ')' after expression")
+			p.NewParserError(p.peek(), "expected \")\" after expression")
 		}
 		return ast.Grouping{Expression: expr}
 	}

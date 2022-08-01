@@ -82,7 +82,7 @@ func TestNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] RuntimeError: undefined variable property "unknown"`
+	expected := `[line 3] RuntimeError: undefined property "unknown"`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()

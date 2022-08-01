@@ -386,7 +386,7 @@ func (r *Resolver) VisitSuperExpr(expr ast.Super) (interface{}, error) {
 
 func (r *Resolver) VisitThisExpr(expr ast.This) (interface{}, error) {
 	if r.currentClass == CT_NONE {
-		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use 'this' outside "+
+		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use \"this\" outside "+
 			"of a class")
 	}
 
