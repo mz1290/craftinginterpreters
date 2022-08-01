@@ -23,23 +23,11 @@ static void resetStack() {
 }
 
 static void runtimeError(const char* format, ...) {
-    // The -1 is because the IP is at the next instruction. We care about the
-    // previous *failed* instruction.
-    for (int i = vm.frameCount - 1; i >= 0; i--) {
-        CallFrame* frame = &vm.frames[i];
-        ObjFunction* function = frame->closure->function;
-        size_t instruction = frame->ip - function->chunk.code - 1;
-        fprintf(stderr, "[line %d] RuntimeError: ",
-            function->chunk.lines[instruction]);
-
-/*
-        if (function->name == NULL) {
-            fprintf(stderr, "script\n");
-        } else {
-            fprintf(stderr, "%s()\n", function->name->chars);
-        }
-*/
-    }
+    CallFrame* frame = &vm.frames[vm.frameCount - 1];
+    ObjFunction* function = frame->closure->function;
+    size_t instruction = frame->ip - function->chunk.code - 1;
+    fprintf(stderr, "[line %d] RuntimeError: ",
+        function->chunk.lines[instruction]);
 
     va_list args;
     va_start(args, format);
