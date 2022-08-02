@@ -14,13 +14,14 @@ class Toggle {
 }
 
 var start = clock();
-var val = true;
-var toggle = Toggle(val);
+//var val = true;
+var toggle = Toggle(true);
 var batch = 0;
 
 while (clock() - start < 10) {
     for (var i = 0; i < 10000; i = i + 1) {
-        val = toggle.activate().value();
+        //val = toggle.activate().value();
+        toggle.activate().value();
     }
 
     batch = batch + 1;
