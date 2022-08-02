@@ -121,7 +121,7 @@ func TestReferToName(t *testing.T) {
 	}
 }
 
-func TestToManyArguments(t *testing.T) {
+func TestTooManyArguments(t *testing.T) {
 	file := "too_many_arguments.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
@@ -139,7 +139,7 @@ func TestToManyArguments(t *testing.T) {
 	}
 }
 
-func TestToManyParameters(t *testing.T) {
+func TestTooManyParameters(t *testing.T) {
 	file := "too_many_parameters.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
