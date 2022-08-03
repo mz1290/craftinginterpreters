@@ -10,14 +10,18 @@ import (
 )
 
 var interpreter = ""
+var golox = "../../golox/golox"
 
 func init() {
 	interpreter = common.GetInterpreter()
 	fmt.Printf("USING: %s\n", interpreter)
 }
 
-/*
 func TestLoopTooLarge(t *testing.T) {
+	if interpreter == golox {
+		return
+	}
+
 	file := "loop_too_large.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
@@ -25,7 +29,7 @@ func TestLoopTooLarge(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `something`
+	expected := `[line 2351] error at "}": loop body too large`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -36,6 +40,10 @@ func TestLoopTooLarge(t *testing.T) {
 }
 
 func TestNoReuseConstants(t *testing.T) {
+	if interpreter == golox {
+		return
+	}
+
 	file := "no_reuse_constants.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
@@ -43,7 +51,7 @@ func TestNoReuseConstants(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `something`
+	expected := `[line 35] error at "1": too many constants in one chunk`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -52,9 +60,12 @@ func TestNoReuseConstants(t *testing.T) {
 		t.Fatalf("expected error (%s) got %s", expected, actualErr)
 	}
 }
-*/
 
 func TestStackOverflow(t *testing.T) {
+	if interpreter == golox {
+		return
+	}
+
 	file := "stack_overflow.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
@@ -62,7 +73,7 @@ func TestStackOverflow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `runtime: goroutine stack exceeds 1000000000-byte limit`
+	expected := `[line 18] RuntimeError: stack overflow`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -72,8 +83,11 @@ func TestStackOverflow(t *testing.T) {
 	}
 }
 
-/*
 func TestTooManyConstants(t *testing.T) {
+	if interpreter == golox {
+		return
+	}
+
 	file := "too_many_constants.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
@@ -81,7 +95,7 @@ func TestTooManyConstants(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `something`
+	expected := `[line 35] error at ""oops"": too many constants in one chunk`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -92,6 +106,10 @@ func TestTooManyConstants(t *testing.T) {
 }
 
 func TestTooManyLocals(t *testing.T) {
+	if interpreter == golox {
+		return
+	}
+
 	file := "too_many_locals.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
@@ -99,7 +117,7 @@ func TestTooManyLocals(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `something`
+	expected := `[line 52] error at "oops": too many local variables in function`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -110,6 +128,10 @@ func TestTooManyLocals(t *testing.T) {
 }
 
 func TestTooManyUpvalues(t *testing.T) {
+	if interpreter == golox {
+		return
+	}
+
 	file := "too_many_upvalues.lox"
 	cmd := exec.Command(interpreter, file)
 	stderr, _ := cmd.StderrPipe()
@@ -117,7 +139,7 @@ func TestTooManyUpvalues(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `something`
+	expected := `[line 102] error at "oops": too many closure variables in function`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -126,4 +148,3 @@ func TestTooManyUpvalues(t *testing.T) {
 		t.Fatalf("expected error (%s) got %s", expected, actualErr)
 	}
 }
-*/
