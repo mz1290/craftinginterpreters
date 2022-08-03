@@ -370,10 +370,10 @@ func (r *Resolver) VisitSetExpr(expr ast.Set) (interface{}, error) {
 
 func (r *Resolver) VisitSuperExpr(expr ast.Super) (interface{}, error) {
 	if r.currentClass == CT_NONE {
-		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use 'super' outside "+
+		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use \"super\" outside "+
 			"of a class")
 	} else if r.currentClass != CT_SUBCLASS {
-		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use 'super' in a "+
+		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use \"super\" in a "+
 			"class with no superclass")
 	}
 

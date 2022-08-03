@@ -126,7 +126,7 @@ func TestNoSuperclassBind(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] error at "super": can't use 'super' in a class with no superclass`
+	expected := `[line 3] error at "super": can't use "super" in a class with no superclass`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -144,7 +144,7 @@ func TestNoSuperclassCall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 3] error at "super": can't use 'super' in a class with no superclass`
+	expected := `[line 3] error at "super": can't use "super" in a class with no superclass`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -209,7 +209,7 @@ func TestSuperAtTopLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] error at "super": can't use 'super' outside of a class`
+	expected := `[line 1] error at "super": can't use "super" outside of a class`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
@@ -218,7 +218,7 @@ func TestSuperAtTopLevel(t *testing.T) {
 		t.Fatalf("expected error (%s) got %s", expected, actualErr)
 	}
 
-	expected = `[line 2] error at "super": can't use 'super' outside of a class`
+	expected = `[line 2] error at "super": can't use "super" outside of a class`
 
 	scanner.Scan()
 	actualErr = scanner.Text()
@@ -257,7 +257,7 @@ func TestSuperInTopLevelFunction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[line 1] error at "super": can't use 'super' outside of a class`
+	expected := `[line 1] error at "super": can't use "super" outside of a class`
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Scan()
