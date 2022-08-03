@@ -88,6 +88,7 @@ typedef struct Compiler {
 
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
+    bool hasSuperclass;
 } ClassCompiler;
 
 // Pattern used throughout clox. Using a single global variable allows us to
@@ -658,6 +659,35 @@ static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+static Token syntheticToken(const char* text) {
+    Token token;
+    token.start = text;
+    token.length = (int)strlen(text);
+    return token;
+}
+
+static void super_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("can't use \"super\" outside of a class");
+    } else if (!currentClass->hasSuperclass) {
+        error("can't use \"super\" in a class with no superclass");
+    }
+
+    consume(TOKEN_DOT, "expected \".\" after \"super\"");
+    consume(TOKEN_IDENTIFIER, "expected superclass method name");
+    uint8_t name = identifierConstant(&parser.previous);
+
+    // Generate code to look up the current receiver stored in “this” and push
+    // it onto the stack
+    namedVariable(syntheticToken("this"), false);
+
+    // Emit code to look up the superclass from its “super” variable and push
+    // on top of stack
+    namedVariable(syntheticToken("super"), false);
+
+    emitBytes(OP_GET_SUPER, name);
+}
+
 // Leading '-' is sitting in previous.
 static void unary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
@@ -717,7 +747,7 @@ ParseRule rules[] = {
     [TOKEN_OR]            = {NULL,     or_,    PREC_OR},
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_SUPER]         = {super_,   NULL,   PREC_NONE},
     [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},
     [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
     [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
@@ -864,8 +894,28 @@ static void classDeclaration() {
     // When compiling a class, push a new ClassCompiler onto that implicit
     // linked stack.
     ClassCompiler classCompiler;
+    classCompiler.hasSuperclass = false;
     classCompiler.enclosing = currentClass;
     currentClass = &classCompiler;
+
+    // Check for superclass
+    if (match(TOKEN_LESS)) {
+        consume(TOKEN_IDENTIFIER, "expected superclass name");
+        variable(false);
+
+        // A class cannot be its own superclass
+        if (identifiersEqual(&className, &parser.previous)) {
+            error("a class can't inherit from itself");
+        }
+
+        beginScope();
+        addLocal(syntheticToken("super"));
+        defineVariable(0);
+
+        namedVariable(className, false);
+        emitByte(OP_INHERIT);
+        classCompiler.hasSuperclass = true;
+    }
 
     // Generate code to load a variable with the given name onto the stack
     namedVariable(className, false);
@@ -880,6 +930,11 @@ static void classDeclaration() {
     // We have a class with a nicely populated method table. We can now pop the
     // class from the top of stack
     emitByte(OP_POP);
+
+    // Close superclass local scope
+    if (classCompiler.hasSuperclass) {
+        endScope();
+    }
 
     // Pop temporary class and restore the enclosing class
     currentClass = currentClass->enclosing;
