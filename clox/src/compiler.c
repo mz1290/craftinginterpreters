@@ -681,11 +681,16 @@ static void super_(bool canAssign) {
     // it onto the stack
     namedVariable(syntheticToken("this"), false);
 
-    // Emit code to look up the superclass from its “super” variable and push
-    // on top of stack
-    namedVariable(syntheticToken("super"), false);
-
-    emitBytes(OP_GET_SUPER, name);
+    if (match(TOKEN_LEFT_PAREN)) {
+        // Optimization for invoking a superclass function
+        uint8_t argCount = argumentList();
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_SUPER_INVOKE, name);
+        emitByte(argCount);
+    } else {
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_GET_SUPER, name);
+    }
 }
 
 // Leading '-' is sitting in previous.
