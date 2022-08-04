@@ -1,3 +1,7 @@
+build-clox:
+	cd clox && \
+	make
+
 build-golox:
 	cd golox && \
 	make
@@ -14,7 +18,11 @@ clean-test:
 	cd test/ && \
 	go clean -testcache
 
+clean-clox:
+	cd clox/ && \
+	make clean
+
 clean-golox:
 	rm -f golox/golox
 
-clean: golox-clean
+clean: clean-golox clean-clox
