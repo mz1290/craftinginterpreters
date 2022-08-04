@@ -22,3 +22,7 @@
 
 # Ignore build dir
 build/
+
+# Ignore gperf profiler
+gperftools*
+out.prof
