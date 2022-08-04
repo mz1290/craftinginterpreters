@@ -6,6 +6,9 @@
 #include "object.h"
 #include "value.h"
 
+static int DEBUG_LOX;
+
+
 void disassembleChunk(Chunk* chunk, const char* name) {
     printf("== %s ==\n", name);
 
@@ -189,8 +192,15 @@ char* debugFlagOf(DebugFlag df) {
 }
 
 void SetDebug(char* settings) {
+    if (settings == NULL) {
+        return;
+    }
+
+    // Create a writable copy of settings string
+    char* settingsCopy = strdup(settings);
+
     // Get the first debug setting
-    char* setting = strtok(settings, ",");
+    char* setting = strtok(settingsCopy, ",");
 
     while (setting != NULL) {
         // Lowercase the string for comparison
@@ -216,4 +226,8 @@ void SetDebug(char* settings) {
         // Advance to next setting
         setting = strtok(NULL, ",");
     }
+}
+
+int GetDebug() {
+    return DEBUG_LOX;
 }

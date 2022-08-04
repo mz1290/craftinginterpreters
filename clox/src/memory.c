@@ -14,7 +14,7 @@
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     vm.bytesAllocated += newSize - oldSize;
 
-    if (newSize > oldSize && DEBUG_LOX & DF_STRESS_GC) {
+    if (newSize > oldSize && GetDebug() & DF_STRESS_GC) {
         collectGarbage();
     }
 
@@ -43,7 +43,7 @@ void markObject(Obj* object) {
     // Prevent adding of already processed objects
     if (object->isMarked) return;
 
-    if (DEBUG_LOX & DF_LOG_GC) {
+    if (GetDebug() & DF_LOG_GC) {
         printf("%p mark ", (void*)object);
         printValue(OBJ_VAL(object));
         printf("\n");
@@ -74,7 +74,7 @@ static void markArray(ValueArray* array) {
 }
 
 static void blackenObject(Obj* object) {
-    if (DEBUG_LOX & DF_LOG_GC) {
+    if (GetDebug() & DF_LOG_GC) {
         printf("%p blacken ", (void*)object);
         printValue(OBJ_VAL(object));
         printf("\n");
@@ -125,7 +125,7 @@ static void blackenObject(Obj* object) {
 // This enables us to handle freeing of different kind of objects and there
 // unique implementations that may require memory allocation.
 static void freeObject(Obj* object) {
-    if (DEBUG_LOX & DF_LOG_GC) {
+    if (GetDebug() & DF_LOG_GC) {
         printf("%p free type %d\n", (void*)object, object->type);
     }
 
@@ -252,7 +252,7 @@ void freeObjects() {
 void collectGarbage() {
     size_t before;
 
-    if (DEBUG_LOX & DF_LOG_GC) {
+    if (GetDebug() & DF_LOG_GC) {
         printf("-- gc begin\n");
         before = vm.bytesAllocated;
     }
@@ -273,7 +273,7 @@ void collectGarbage() {
     // Adjust GC threshold
     vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;
 
-    if (DEBUG_LOX & DF_LOG_GC) {
+    if (GetDebug() & DF_LOG_GC) {
         printf("-- gc end\n");
         printf("   collected %zu bytes (from %zu to %zu) next at %zu\n",
             before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);

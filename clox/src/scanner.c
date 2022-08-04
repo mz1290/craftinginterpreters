@@ -18,7 +18,7 @@ void initScanner(const char* source) {
     scanner.current = source;
     scanner.line = 1;
 
-    if (DEBUG_LOX & DF_SCANNING) {
+    if (GetDebug() & DF_SCANNING) {
         Scanner tmp = scanner;
 
         Scanner scannerCopy;

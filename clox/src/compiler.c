@@ -7,9 +7,7 @@
 #include "memory.h"
 #include "scanner.h"
 
-//#ifdef DEBUG_PRINT_CODE
 #include "debug.h"
-//#endif
 
 
 // Storage for current and previous tokens
@@ -299,7 +297,7 @@ static ObjFunction* endCompiler() {
     emitReturn();
     ObjFunction* function = current->function;
 
-    if (DEBUG_LOX & DF_CODE) {
+    if (GetDebug() & DF_CODE) {
         if (!parser.hadError) {
             disassembleChunk(currentChunk(), function->name != NULL
                 ? function->name->chars : "<script>");

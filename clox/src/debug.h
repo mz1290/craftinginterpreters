@@ -3,7 +3,6 @@
 
 #include "chunk.h"
 
-int DEBUG_LOX;
 
 // https://stackoverflow.com/questions/1631266/flags-enum-c
 typedef enum {
@@ -15,6 +14,7 @@ typedef enum {
 } DebugFlag;
 
 void SetDebug(char*);
+int GetDebug();
 
 // An offset is simply the number of bytes from the beginning of the chunk.
 
