@@ -26,3 +26,7 @@ build/
 # Ignore gperf profiler
 gperftools*
 out.prof
+
+# Ignore binaries
+clox-*
+golox-*

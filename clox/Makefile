@@ -21,6 +21,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
+#CFLAGS := -g -Wall -Wextra -Werror -Wno-unused-parameter $(INC_FLAGS) -MMD -MP -Lgperftools-2.10/.libs/ -lprofiler
 CFLAGS := -g -Wall -Wextra -Werror -Wno-unused-parameter $(INC_FLAGS) -MMD -MP
 
 # The final build step.
