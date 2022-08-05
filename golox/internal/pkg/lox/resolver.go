@@ -85,7 +85,7 @@ func (r *Resolver) resolveExpression(expression ast.Expr) {
 	expression.Accept(r)
 }
 
-func (r *Resolver) resolveFunction(function ast.Function, ftype FunctionType) {
+func (r *Resolver) resolveFunction(function *ast.Function, ftype FunctionType) {
 	enclosingFunction := r.currentFunction
 	r.currentFunction = ftype
 
@@ -156,7 +156,7 @@ func (r *Resolver) resolveLocal(expr ast.Expr, name *token.Token) {
 	}
 }
 
-func (r *Resolver) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
+func (r *Resolver) VisitBlockStmt(stmt *ast.Block) (interface{}, error) {
 	// Begins a new scope
 	r.beginScope()
 
@@ -169,7 +169,7 @@ func (r *Resolver) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
+func (r *Resolver) VisitClassStmt(stmt *ast.Class) (interface{}, error) {
 	enclosingClass := r.currentClass
 	r.currentClass = CT_CLASS
 
@@ -177,7 +177,7 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	r.define(stmt.Name)
 
 	// Superclass is not pointer to struct, this checks if struct is not empty
-	if stmt.Superclass != (ast.Variable{}) {
+	if stmt.Superclass != nil {
 		// Confirm that there is no cycle in the inheritance chain
 		if stmt.Name.Lexeme == stmt.Superclass.Name.Lexeme {
 			r.runtime.ErrorTokenMessage(stmt.Superclass.Name,
@@ -189,7 +189,7 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 		r.resolveExpression(stmt.Superclass)
 	}
 
-	if stmt.Superclass != (ast.Variable{}) {
+	if stmt.Superclass != nil {
 		// Begin a new scope for defining super
 		r.beginScope()
 		// Get the scope from stack and add "super"
@@ -217,7 +217,7 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	r.endScope()
 
 	// If superclass existed, we need to remove the super scope
-	if stmt.Superclass != (ast.Variable{}) {
+	if stmt.Superclass != nil {
 		r.endScope()
 	}
 
@@ -227,7 +227,7 @@ func (r *Resolver) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitFunctionStmt(stmt ast.Function) (interface{}, error) {
+func (r *Resolver) VisitFunctionStmt(stmt *ast.Function) (interface{}, error) {
 	// Declare and define the function name in current scope
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
@@ -239,7 +239,7 @@ func (r *Resolver) VisitFunctionStmt(stmt ast.Function) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitVarStmt(stmt ast.Var) (interface{}, error) {
+func (r *Resolver) VisitVarStmt(stmt *ast.Var) (interface{}, error) {
 	r.declare(stmt.Name)
 
 	if stmt.Initializer != nil {
@@ -251,13 +251,13 @@ func (r *Resolver) VisitVarStmt(stmt ast.Var) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitAssignExpr(expr ast.Assign) (interface{}, error) {
+func (r *Resolver) VisitAssignExpr(expr *ast.Assign) (interface{}, error) {
 	r.resolveExpression(expr.Value)
 	r.resolveLocal(expr, expr.Name)
 	return nil, nil
 }
 
-func (r *Resolver) VisitVariableExpr(expr ast.Variable) (interface{}, error) {
+func (r *Resolver) VisitVariableExpr(expr *ast.Variable) (interface{}, error) {
 	if r.scopes.Len() != 0 {
 		// Get the scope from stack
 		scope := r.scopes.Peek().(Scope)
@@ -278,12 +278,12 @@ func (r *Resolver) VisitVariableExpr(expr ast.Variable) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitExpressionStmt(stmt ast.Expression) (interface{}, error) {
+func (r *Resolver) VisitExpressionStmt(stmt *ast.Expression) (interface{}, error) {
 	r.resolveExpression(stmt.Expression)
 	return nil, nil
 }
 
-func (r *Resolver) VisitIfStmt(stmt ast.If) (interface{}, error) {
+func (r *Resolver) VisitIfStmt(stmt *ast.If) (interface{}, error) {
 	r.resolveExpression(stmt.Condition)
 
 	r.resolveStatement(stmt.ThenBranch)
@@ -295,12 +295,12 @@ func (r *Resolver) VisitIfStmt(stmt ast.If) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitPrintStmt(stmt ast.Print) (interface{}, error) {
+func (r *Resolver) VisitPrintStmt(stmt *ast.Print) (interface{}, error) {
 	r.resolveExpression(stmt.Expression)
 	return nil, nil
 }
 
-func (r *Resolver) VisitReturnStmt(stmt ast.Return) (interface{}, error) {
+func (r *Resolver) VisitReturnStmt(stmt *ast.Return) (interface{}, error) {
 	// Check if we are inside a function
 	if r.currentFunction == FT_NONE {
 		r.runtime.ErrorTokenMessage(stmt.Keyword, "can't return from "+
@@ -320,19 +320,19 @@ func (r *Resolver) VisitReturnStmt(stmt ast.Return) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitWhileStmt(stmt ast.While) (interface{}, error) {
+func (r *Resolver) VisitWhileStmt(stmt *ast.While) (interface{}, error) {
 	r.resolveExpression(stmt.Condition)
 	r.resolveStatement(stmt.Body)
 	return nil, nil
 }
 
-func (r *Resolver) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
+func (r *Resolver) VisitBinaryExpr(expr *ast.Binary) (interface{}, error) {
 	r.resolveExpression(expr.Left)
 	r.resolveExpression(expr.Right)
 	return nil, nil
 }
 
-func (r *Resolver) VisitCallExpr(expr ast.Call) (interface{}, error) {
+func (r *Resolver) VisitCallExpr(expr *ast.Call) (interface{}, error) {
 	r.resolveExpression(expr.Callee)
 
 	for _, arg := range expr.Arguments {
@@ -342,33 +342,33 @@ func (r *Resolver) VisitCallExpr(expr ast.Call) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitGetExpr(expr ast.Get) (interface{}, error) {
+func (r *Resolver) VisitGetExpr(expr *ast.Get) (interface{}, error) {
 	r.resolveExpression(expr.Object)
 	return nil, nil
 }
 
-func (r *Resolver) VisitGroupingExpr(expr ast.Grouping) (interface{}, error) {
+func (r *Resolver) VisitGroupingExpr(expr *ast.Grouping) (interface{}, error) {
 	r.resolveExpression(expr.Expression)
 	return nil, nil
 }
 
-func (r *Resolver) VisitLiteralExpr(expr ast.Literal) (interface{}, error) {
+func (r *Resolver) VisitLiteralExpr(expr *ast.Literal) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
+func (r *Resolver) VisitLogicalExpr(expr *ast.Logical) (interface{}, error) {
 	r.resolveExpression(expr.Left)
 	r.resolveExpression(expr.Right)
 	return nil, nil
 }
 
-func (r *Resolver) VisitSetExpr(expr ast.Set) (interface{}, error) {
+func (r *Resolver) VisitSetExpr(expr *ast.Set) (interface{}, error) {
 	r.resolveExpression(expr.Value)
 	r.resolveExpression(expr.Object)
 	return nil, nil
 }
 
-func (r *Resolver) VisitSuperExpr(expr ast.Super) (interface{}, error) {
+func (r *Resolver) VisitSuperExpr(expr *ast.Super) (interface{}, error) {
 	if r.currentClass == CT_NONE {
 		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use \"super\" outside "+
 			"of a class")
@@ -384,7 +384,7 @@ func (r *Resolver) VisitSuperExpr(expr ast.Super) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitThisExpr(expr ast.This) (interface{}, error) {
+func (r *Resolver) VisitThisExpr(expr *ast.This) (interface{}, error) {
 	if r.currentClass == CT_NONE {
 		r.runtime.ErrorTokenMessage(expr.Keyword, "can't use \"this\" outside "+
 			"of a class")
@@ -394,7 +394,7 @@ func (r *Resolver) VisitThisExpr(expr ast.This) (interface{}, error) {
 	return nil, nil
 }
 
-func (r *Resolver) VisitUnaryExpr(expr ast.Unary) (interface{}, error) {
+func (r *Resolver) VisitUnaryExpr(expr *ast.Unary) (interface{}, error) {
 	r.resolveExpression(expr.Right)
 	return nil, nil
 }

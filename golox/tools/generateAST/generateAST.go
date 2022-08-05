@@ -38,7 +38,7 @@ func main() {
 
 	defineAST(outputDir, "Stmt", []string{
 		"Block      : Statements []Stmt",
-		"Class      : Name *token.Token, Superclass Variable, Methods []Function",
+		"Class      : Name *token.Token, Superclass *Variable, Methods []*Function",
 		"Expression : Expression Expr",
 		"Function   : Name *token.Token, Params []*token.Token, Body []Stmt",
 		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",
@@ -122,7 +122,7 @@ func defineVisitor(w io.StringWriter, baseName string, types []string) {
 	for _, t := range types {
 		splits := strings.Split(t, ":")
 		typeName := strings.Trim(splits[0], " ")
-		w.WriteString(fmt.Sprintf("\tVisit%s%s(%s %s) (interface{}, error)\n",
+		w.WriteString(fmt.Sprintf("\tVisit%s%s(%s *%s) (interface{}, error)\n",
 			typeName, baseName,
 			strings.ToLower(baseName), typeName,
 		))
@@ -142,7 +142,7 @@ func defineAccept(w io.StringWriter, baseName string, t string) {
 	splits := strings.Split(t, ":")
 	typeName := strings.Trim(splits[0], " ")
 
-	w.WriteString(fmt.Sprintf("func (x %s) Accept(v %sVisitor) (interface{}, error) {\n", typeName, baseName))
+	w.WriteString(fmt.Sprintf("func (x *%s) Accept(v %sVisitor) (interface{}, error) {\n", typeName, baseName))
 	w.WriteString(fmt.Sprintf("\treturn v.Visit%s%s(x)\n", typeName, baseName))
 	w.WriteString("}\n")
 }

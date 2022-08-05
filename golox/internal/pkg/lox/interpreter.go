@@ -39,11 +39,11 @@ func (i *Interpreter) Interpret(statements []ast.Stmt) {
 	}
 }
 
-func (i *Interpreter) VisitLiteralExpr(expr ast.Literal) (interface{}, error) {
+func (i *Interpreter) VisitLiteralExpr(expr *ast.Literal) (interface{}, error) {
 	return expr.Value, nil
 }
 
-func (i *Interpreter) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
+func (i *Interpreter) VisitLogicalExpr(expr *ast.Logical) (interface{}, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (i *Interpreter) VisitLogicalExpr(expr ast.Logical) (interface{}, error) {
 	return i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) VisitSetExpr(expr ast.Set) (interface{}, error) {
+func (i *Interpreter) VisitSetExpr(expr *ast.Set) (interface{}, error) {
 	// Evaluate object whose property is being set
 	object, err := i.evaluate(expr.Object)
 	if err != nil {
@@ -89,7 +89,7 @@ func (i *Interpreter) VisitSetExpr(expr ast.Set) (interface{}, error) {
 	return value, nil
 }
 
-func (i *Interpreter) VisitSuperExpr(expr ast.Super) (interface{}, error) {
+func (i *Interpreter) VisitSuperExpr(expr *ast.Super) (interface{}, error) {
 	// Get number of hops to superclass env
 	distance := i.locals[expr]
 
@@ -110,15 +110,15 @@ func (i *Interpreter) VisitSuperExpr(expr ast.Super) (interface{}, error) {
 	return method.Bind(object), nil
 }
 
-func (i *Interpreter) VisitThisExpr(expr ast.This) (interface{}, error) {
+func (i *Interpreter) VisitThisExpr(expr *ast.This) (interface{}, error) {
 	return i.lookUpVariable(expr.Keyword, expr), nil
 }
 
-func (i *Interpreter) VisitGroupingExpr(expr ast.Grouping) (interface{}, error) {
+func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping) (interface{}, error) {
 	return i.evaluate(expr.Expression)
 }
 
-func (i *Interpreter) VisitUnaryExpr(expr ast.Unary) (interface{}, error) {
+func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary) (interface{}, error) {
 	// Evaluate subexpression first
 	right, err := i.evaluate(expr.Right)
 	if err != nil {
@@ -140,7 +140,7 @@ func (i *Interpreter) VisitUnaryExpr(expr ast.Unary) (interface{}, error) {
 	return nil, errors.RuntimeError.New(expr.Operator, "unreachable")
 }
 
-func (i *Interpreter) VisitVariableExpr(expr ast.Variable) (interface{}, error) {
+func (i *Interpreter) VisitVariableExpr(expr *ast.Variable) (interface{}, error) {
 	return i.lookUpVariable(expr.Name, expr), nil
 }
 
@@ -183,16 +183,16 @@ func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environme
 	return val, nil
 }
 
-func (i *Interpreter) VisitBlockStmt(stmt ast.Block) (interface{}, error) {
+func (i *Interpreter) VisitBlockStmt(stmt *ast.Block) (interface{}, error) {
 	return i.executeBlock(stmt.Statements, NewLocalEnvironment(i.environment))
 }
 
-func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
+func (i *Interpreter) VisitClassStmt(stmt *ast.Class) (interface{}, error) {
 	// This two-stage variable binding process allows references to the class
 	// inside its own methods.
 
 	var superclass interface{}
-	if stmt.Superclass != (ast.Variable{}) {
+	if stmt.Superclass != nil {
 		var err error
 
 		superclass, err = i.evaluate(stmt.Superclass)
@@ -213,7 +213,7 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	// If we created a runtime object for superclass, we need to update the
 	// interpreter's current environment with a new one that stores the
 	// superclass.
-	if stmt.Superclass != (ast.Variable{}) {
+	if stmt.Superclass != nil {
 		i.environment = NewLocalEnvironment(i.environment)
 		i.environment.Define("super", superclass)
 	}
@@ -244,7 +244,7 @@ func (i *Interpreter) VisitClassStmt(stmt ast.Class) (interface{}, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
+func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) (interface{}, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -321,7 +321,7 @@ func (i *Interpreter) VisitBinaryExpr(expr ast.Binary) (interface{}, error) {
 	return nil, errors.RuntimeError.New(expr.Operator, "unreachable")
 }
 
-func (i *Interpreter) VisitCallExpr(expr ast.Call) (interface{}, error) {
+func (i *Interpreter) VisitCallExpr(expr *ast.Call) (interface{}, error) {
 	callee, err := i.evaluate(expr.Callee)
 	if err != nil {
 		return nil, err
@@ -350,7 +350,7 @@ func (i *Interpreter) VisitCallExpr(expr ast.Call) (interface{}, error) {
 	return function.Call(i, arguments)
 }
 
-func (i *Interpreter) VisitGetExpr(expr ast.Get) (interface{}, error) {
+func (i *Interpreter) VisitGetExpr(expr *ast.Get) (interface{}, error) {
 	object, err := i.evaluate(expr.Object)
 	if err != nil {
 		return nil, err
@@ -364,17 +364,17 @@ func (i *Interpreter) VisitGetExpr(expr ast.Get) (interface{}, error) {
 		"properties")
 }
 
-func (i *Interpreter) VisitExpressionStmt(stmt ast.Expression) (interface{}, error) {
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.Expression) (interface{}, error) {
 	return i.evaluate(stmt.Expression)
 }
 
-func (i *Interpreter) VisitFunctionStmt(stmt ast.Function) (interface{}, error) {
+func (i *Interpreter) VisitFunctionStmt(stmt *ast.Function) (interface{}, error) {
 	function := NewFunction(stmt, i.environment, false)
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil, nil
 }
 
-func (i *Interpreter) VisitIfStmt(stmt ast.If) (interface{}, error) {
+func (i *Interpreter) VisitIfStmt(stmt *ast.If) (interface{}, error) {
 	condition, _ := i.evaluate(stmt.Condition)
 
 	if common.IsTruthy(condition) {
@@ -386,7 +386,7 @@ func (i *Interpreter) VisitIfStmt(stmt ast.If) (interface{}, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitPrintStmt(stmt ast.Print) (interface{}, error) {
+func (i *Interpreter) VisitPrintStmt(stmt *ast.Print) (interface{}, error) {
 	value, err := i.evaluate(stmt.Expression)
 	if err != nil {
 		return nil, err
@@ -396,7 +396,7 @@ func (i *Interpreter) VisitPrintStmt(stmt ast.Print) (interface{}, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitReturnStmt(stmt ast.Return) (interface{}, error) {
+func (i *Interpreter) VisitReturnStmt(stmt *ast.Return) (interface{}, error) {
 	var value interface{}
 
 	if stmt.Value != nil {
@@ -411,7 +411,7 @@ func (i *Interpreter) VisitReturnStmt(stmt ast.Return) (interface{}, error) {
 	return nil, NewReturn(value)
 }
 
-func (i *Interpreter) VisitVarStmt(stmt ast.Var) (interface{}, error) {
+func (i *Interpreter) VisitVarStmt(stmt *ast.Var) (interface{}, error) {
 	var value interface{}
 	var err error
 
@@ -426,7 +426,7 @@ func (i *Interpreter) VisitVarStmt(stmt ast.Var) (interface{}, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitWhileStmt(stmt ast.While) (interface{}, error) {
+func (i *Interpreter) VisitWhileStmt(stmt *ast.While) (interface{}, error) {
 	for {
 		condition, err := i.evaluate(stmt.Condition)
 		if err != nil {
@@ -446,7 +446,7 @@ func (i *Interpreter) VisitWhileStmt(stmt ast.While) (interface{}, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) VisitAssignExpr(expr ast.Assign) (interface{}, error) {
+func (i *Interpreter) VisitAssignExpr(expr *ast.Assign) (interface{}, error) {
 	value, err := i.evaluate(expr.Value)
 	if err != nil {
 		return nil, err

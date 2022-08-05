@@ -62,12 +62,12 @@ func IsFloat64(object interface{}) bool {
 }
 
 func IsVariableExpression(object interface{}) bool {
-	_, ok := object.(ast.Variable)
+	_, ok := object.(*ast.Variable)
 	return ok
 }
 
 func IsGet(object interface{}) bool {
-	_, ok := object.(ast.Get)
+	_, ok := object.(*ast.Get)
 	return ok
 }
 

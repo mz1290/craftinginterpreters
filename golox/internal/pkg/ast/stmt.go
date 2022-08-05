@@ -10,15 +10,15 @@ type Stmt interface {
 }
 
 type StmtVisitor interface {
-	VisitBlockStmt(stmt Block) (interface{}, error)
-	VisitClassStmt(stmt Class) (interface{}, error)
-	VisitExpressionStmt(stmt Expression) (interface{}, error)
-	VisitFunctionStmt(stmt Function) (interface{}, error)
-	VisitIfStmt(stmt If) (interface{}, error)
-	VisitPrintStmt(stmt Print) (interface{}, error)
-	VisitReturnStmt(stmt Return) (interface{}, error)
-	VisitVarStmt(stmt Var) (interface{}, error)
-	VisitWhileStmt(stmt While) (interface{}, error)
+	VisitBlockStmt(stmt *Block) (interface{}, error)
+	VisitClassStmt(stmt *Class) (interface{}, error)
+	VisitExpressionStmt(stmt *Expression) (interface{}, error)
+	VisitFunctionStmt(stmt *Function) (interface{}, error)
+	VisitIfStmt(stmt *If) (interface{}, error)
+	VisitPrintStmt(stmt *Print) (interface{}, error)
+	VisitReturnStmt(stmt *Return) (interface{}, error)
+	VisitVarStmt(stmt *Var) (interface{}, error)
+	VisitWhileStmt(stmt *While) (interface{}, error)
 }
 
 type StmtAcceptor interface {
@@ -29,17 +29,17 @@ type Block struct {
 	Statements []Stmt
 }
 
-func (x Block) Accept(v StmtVisitor) (interface{}, error) {
+func (x *Block) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitBlockStmt(x)
 }
 
 type Class struct {
 	Name *token.Token
-	Superclass Variable
-	Methods []Function
+	Superclass *Variable
+	Methods []*Function
 }
 
-func (x Class) Accept(v StmtVisitor) (interface{}, error) {
+func (x *Class) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitClassStmt(x)
 }
 
@@ -47,7 +47,7 @@ type Expression struct {
 	Expression Expr
 }
 
-func (x Expression) Accept(v StmtVisitor) (interface{}, error) {
+func (x *Expression) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitExpressionStmt(x)
 }
 
@@ -57,7 +57,7 @@ type Function struct {
 	Body []Stmt
 }
 
-func (x Function) Accept(v StmtVisitor) (interface{}, error) {
+func (x *Function) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitFunctionStmt(x)
 }
 
@@ -67,7 +67,7 @@ type If struct {
 	ElseBranch Stmt
 }
 
-func (x If) Accept(v StmtVisitor) (interface{}, error) {
+func (x *If) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitIfStmt(x)
 }
 
@@ -75,7 +75,7 @@ type Print struct {
 	Expression Expr
 }
 
-func (x Print) Accept(v StmtVisitor) (interface{}, error) {
+func (x *Print) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitPrintStmt(x)
 }
 
@@ -84,7 +84,7 @@ type Return struct {
 	Value Expr
 }
 
-func (x Return) Accept(v StmtVisitor) (interface{}, error) {
+func (x *Return) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitReturnStmt(x)
 }
 
@@ -93,7 +93,7 @@ type Var struct {
 	Initializer Expr
 }
 
-func (x Var) Accept(v StmtVisitor) (interface{}, error) {
+func (x *Var) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitVarStmt(x)
 }
 
@@ -102,7 +102,7 @@ type While struct {
 	Body Stmt
 }
 
-func (x While) Accept(v StmtVisitor) (interface{}, error) {
+func (x *While) Accept(v StmtVisitor) (interface{}, error) {
 	return v.VisitWhileStmt(x)
 }
 

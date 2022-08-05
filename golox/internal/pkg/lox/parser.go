@@ -60,7 +60,7 @@ func (p *Parser) statement() ast.Stmt {
 	}
 
 	if p.match(token.LEFT_BRACE) {
-		return ast.Block{Statements: p.block()}
+		return &ast.Block{Statements: p.block()}
 	}
 
 	return p.expressionStatement()
@@ -103,18 +103,18 @@ func (p *Parser) forStatement() ast.Stmt {
 
 	// desugaring for-loop
 	if increment != nil {
-		body = ast.Block{
-			Statements: []ast.Stmt{body, ast.Expression{Expression: increment}},
+		body = &ast.Block{
+			Statements: []ast.Stmt{body, &ast.Expression{Expression: increment}},
 		}
 	}
 
 	if condition == nil {
-		condition = ast.Literal{Value: true}
+		condition = &ast.Literal{Value: true}
 	}
-	body = ast.While{Condition: condition, Body: body}
+	body = &ast.While{Condition: condition, Body: body}
 
 	if initializer != nil {
-		body = ast.Block{
+		body = &ast.Block{
 			Statements: []ast.Stmt{initializer, body},
 		}
 	}
@@ -141,7 +141,7 @@ func (p *Parser) ifStatement() ast.Stmt {
 		elseBranch = p.statement()
 	}
 
-	return ast.If{
+	return &ast.If{
 		Condition:  condition,
 		ThenBranch: thenBranch,
 		ElseBranch: elseBranch,
@@ -156,7 +156,7 @@ func (p *Parser) printStatement() ast.Stmt {
 		p.NewParserError(p.peek(), "expected \";\" after value")
 	}
 
-	return ast.Print{Expression: value}
+	return &ast.Print{Expression: value}
 }
 
 func (p *Parser) returnStatement() ast.Stmt {
@@ -172,7 +172,7 @@ func (p *Parser) returnStatement() ast.Stmt {
 		p.NewParserError(p.peek(), "expected \";\" after return value")
 	}
 
-	return ast.Return{Keyword: keyword, Value: value}
+	return &ast.Return{Keyword: keyword, Value: value}
 }
 
 func (p *Parser) varDeclaration() ast.Stmt {
@@ -191,7 +191,7 @@ func (p *Parser) varDeclaration() ast.Stmt {
 		p.NewParserError(p.peek(), "expected \";\" after variable declaration")
 	}
 
-	return ast.Var{Name: name, Initializer: initializer}
+	return &ast.Var{Name: name, Initializer: initializer}
 }
 
 func (p *Parser) whileStatement() ast.Stmt {
@@ -209,7 +209,7 @@ func (p *Parser) whileStatement() ast.Stmt {
 
 	body := p.statement()
 
-	return ast.While{Condition: condition, Body: body}
+	return &ast.While{Condition: condition, Body: body}
 }
 
 func (p *Parser) expressionStatement() ast.Stmt {
@@ -220,7 +220,7 @@ func (p *Parser) expressionStatement() ast.Stmt {
 		p.NewParserError(p.peek(), "expected \";\" after expression")
 	}
 
-	return ast.Expression{Expression: expr}
+	return &ast.Expression{Expression: expr}
 }
 
 func (p *Parser) function(kind string) ast.Stmt {
@@ -268,7 +268,7 @@ func (p *Parser) function(kind string) ast.Stmt {
 
 	body := p.block()
 
-	return ast.Function{Name: name, Params: parameters, Body: body}
+	return &ast.Function{Name: name, Params: parameters, Body: body}
 }
 func (p *Parser) block() []ast.Stmt {
 	var statements []ast.Stmt
@@ -293,15 +293,15 @@ func (p *Parser) assignment() ast.Expr {
 		value := p.assignment()
 
 		if common.IsVariableExpression(expr) {
-			name := expr.(ast.Variable).Name
-			return ast.Assign{Name: name, Value: value}
+			name := expr.(*ast.Variable).Name
+			return &ast.Assign{Name: name, Value: value}
 		} else if common.IsGet(expr) {
 			// Everything up to this point was "get" for an Instance
-			get := expr.(ast.Get)
+			get := expr.(*ast.Get)
 
 			// This last object MUST be a "set" if we are assigning so we
 			// transform using the object properties from a "get" to a "set"
-			return ast.Set{Object: get.Object, Name: get.Name, Value: value}
+			return &ast.Set{Object: get.Object, Name: get.Name, Value: value}
 		}
 
 		p.NewParserError(equals, "invalid assignment target")
@@ -316,7 +316,7 @@ func (p *Parser) or() ast.Expr {
 	for p.match(token.OR) {
 		operator := p.previous()
 		right := p.and()
-		expr = ast.Logical{Left: expr, Operator: operator, Right: right}
+		expr = &ast.Logical{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr
@@ -328,7 +328,7 @@ func (p *Parser) and() ast.Expr {
 	for p.match(token.AND) {
 		operator := p.previous()
 		right := p.equality()
-		expr = ast.Logical{Left: expr, Operator: operator, Right: right}
+		expr = &ast.Logical{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr
@@ -368,14 +368,14 @@ func (p *Parser) classDeclaration() ast.Stmt {
 		p.NewParserError(p.peek(), "expected class name")
 	}
 
-	var superclass ast.Variable
+	var superclass *ast.Variable
 	if p.match(token.LESS) {
 		_, ok := p.consume(token.IDENTIFIER)
 		if !ok {
 			p.NewParserError(p.peek(), "expected superclass name")
 		}
 
-		superclass = ast.Variable{Name: p.previous()}
+		superclass = &ast.Variable{Name: p.previous()}
 	}
 
 	// Consume the left bracket
@@ -384,9 +384,9 @@ func (p *Parser) classDeclaration() ast.Stmt {
 		p.NewParserError(p.peek(), "expected \"}\" after class body")
 	}
 
-	var methods []ast.Function
+	var methods []*ast.Function
 	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
-		methods = append(methods, p.function("method").(ast.Function))
+		methods = append(methods, p.function("method").(*ast.Function))
 	}
 
 	_, ok = p.consume(token.RIGHT_BRACE)
@@ -394,7 +394,7 @@ func (p *Parser) classDeclaration() ast.Stmt {
 		p.NewParserError(p.peek(), "expected \"}\" after class body")
 	}
 
-	return ast.Class{Name: name, Superclass: superclass, Methods: methods}
+	return &ast.Class{Name: name, Superclass: superclass, Methods: methods}
 }
 
 func (p *Parser) equality() ast.Expr {
@@ -403,7 +403,7 @@ func (p *Parser) equality() ast.Expr {
 	for p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) {
 		operator := p.previous()
 		right := p.comparison()
-		expr = ast.Binary{Left: expr, Operator: operator, Right: right}
+		expr = &ast.Binary{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr
@@ -416,7 +416,7 @@ func (p *Parser) comparison() ast.Expr {
 		token.LESS_EQUAL) {
 		operator := p.previous()
 		right := p.term()
-		expr = ast.Binary{Left: expr, Operator: operator, Right: right}
+		expr = &ast.Binary{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr
@@ -428,7 +428,7 @@ func (p *Parser) term() ast.Expr {
 	for p.match(token.MINUS, token.PLUS) {
 		operator := p.previous()
 		right := p.factor()
-		expr = ast.Binary{Left: expr, Operator: operator, Right: right}
+		expr = &ast.Binary{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr
@@ -440,7 +440,7 @@ func (p *Parser) factor() ast.Expr {
 	for p.match(token.SLASH, token.STAR) {
 		operator := p.previous()
 		right := p.unary()
-		expr = ast.Binary{Left: expr, Operator: operator, Right: right}
+		expr = &ast.Binary{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr
@@ -450,7 +450,7 @@ func (p *Parser) unary() ast.Expr {
 	if p.match(token.BANG, token.MINUS) {
 		operator := p.previous()
 		right := p.unary()
-		return ast.Unary{Operator: operator, Right: right}
+		return &ast.Unary{Operator: operator, Right: right}
 	}
 
 	return p.call()
@@ -477,7 +477,7 @@ func (p *Parser) finishCall(callee ast.Expr) ast.Expr {
 		p.NewParserError(p.peek(), "expected \")\" after arguments")
 	}
 
-	return ast.Call{Callee: callee, Paren: paren, Arguments: arguments}
+	return &ast.Call{Callee: callee, Paren: paren, Arguments: arguments}
 }
 
 func (p *Parser) call() ast.Expr {
@@ -492,7 +492,7 @@ func (p *Parser) call() ast.Expr {
 				p.NewParserError(p.peek(), "expected property name after \".\"")
 			}
 
-			expr = ast.Get{Object: expr, Name: name}
+			expr = &ast.Get{Object: expr, Name: name}
 		} else {
 			break
 		}
@@ -503,19 +503,19 @@ func (p *Parser) call() ast.Expr {
 
 func (p *Parser) primary() ast.Expr {
 	if p.match(token.FALSE) {
-		return ast.Literal{Value: false}
+		return &ast.Literal{Value: false}
 	}
 
 	if p.match(token.TRUE) {
-		return ast.Literal{Value: true}
+		return &ast.Literal{Value: true}
 	}
 
 	if p.match(token.NIL) {
-		return ast.Literal{Value: nil}
+		return &ast.Literal{Value: nil}
 	}
 
 	if p.match(token.NUMBER, token.STRING) {
-		return ast.Literal{Value: p.previous().Literal}
+		return &ast.Literal{Value: p.previous().Literal}
 	}
 
 	if p.match(token.SUPER) {
@@ -531,15 +531,15 @@ func (p *Parser) primary() ast.Expr {
 			p.NewParserError(p.peek(), "expected superclass method name")
 		}
 
-		return ast.Super{Keyword: keyword, Method: method}
+		return &ast.Super{Keyword: keyword, Method: method}
 	}
 
 	if p.match(token.THIS) {
-		return ast.This{Keyword: p.previous()}
+		return &ast.This{Keyword: p.previous()}
 	}
 
 	if p.match(token.IDENTIFIER) {
-		return ast.Variable{Name: p.previous()}
+		return &ast.Variable{Name: p.previous()}
 	}
 
 	if p.match(token.LEFT_PAREN) {
@@ -548,7 +548,7 @@ func (p *Parser) primary() ast.Expr {
 		if !ok {
 			p.NewParserError(p.peek(), "expected \")\" after expression")
 		}
-		return ast.Grouping{Expression: expr}
+		return &ast.Grouping{Expression: expr}
 	}
 
 	// Token can't start an expression

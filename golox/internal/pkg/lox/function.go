@@ -12,11 +12,11 @@ import (
 
 type Function struct {
 	Closure       *Environment
-	Declaration   ast.Function
+	Declaration   *ast.Function
 	isInitializer bool
 }
 
-func NewFunction(declaration ast.Function, closure *Environment, isInitializer bool) *Function {
+func NewFunction(declaration *ast.Function, closure *Environment, isInitializer bool) *Function {
 	return &Function{
 		Closure:       closure,
 		Declaration:   declaration,

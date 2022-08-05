@@ -1,0 +1,14 @@
+class Foo {
+  init() {
+    this.val = 1;
+  }
+
+  getVal() {
+    return this.val;
+  }
+}
+
+var myFoo = Foo();
+var sum = 0;
+sum = sum + myFoo.getVal();
+print sum;

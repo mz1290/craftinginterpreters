@@ -27,6 +27,17 @@ func TestArity(t *testing.T) {
 	}
 }
 
+func TestMethodAssign(t *testing.T) {
+	file := "assign_variable.lox"
+	cmd := exec.Command(interpreter, file)
+	stdout, _ := cmd.Output()
+	expected := "1\n"
+
+	if string(stdout) != expected {
+		t.Fatalf("expected %s got %s", expected, string(stdout))
+	}
+}
+
 func TestEmptyBlock(t *testing.T) {
 	file := "empty_block.lox"
 	cmd := exec.Command(interpreter, file)
