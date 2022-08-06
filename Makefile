@@ -2,11 +2,11 @@ all: build-golox build-clox
 	cp clox/build/clox clox-1.0.0 && \
 	cp golox/golox golox-1.0.0
 
-shell-clox: build-clox
+repl-clox: build-clox
 	cd clox && \
 	./build/clox
 
-shell-golox: build-golox
+repl-golox: build-golox
 	cd golox && \
 	./golox
 
