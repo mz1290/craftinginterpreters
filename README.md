@@ -1,6 +1,6 @@
 # craftinginterpreters
 
-### Overview
+## Overview
 This repository is the product of my OSU CS 467 Capstone research project. For 
 the project I read and completed Robert Nystrom's 
 [Crafting Interpreters](https://craftinginterpreters.com/). This capstone 
@@ -53,12 +53,12 @@ hand.
 - Functions (with closure support)
 - Classes (with inheritance)
 
-### Required Dependencies
+## Required Dependencies
 - Golang
 - C compiler (clang or gcc)
 - Make
 
-### Usage
+## Usage
 The repository contains both interpreters, a test suite, and a Makefile in the 
 root directory containing targets for the users to easily interact with the 
 project.
@@ -95,7 +95,7 @@ true
 3.53778
 ```
 
-### Performance
+## Performance
 After completing both interpreters I wanted to spend some time to get an idea on how exactly each interpreter compares to the other but also how it stacks up against a real world language. Benchmarking programming languages and comparing performance is a much more controversial task than benchmarking a real-world running application since the algorithm, hardware, and compiler can have a huge impact in the results. Robert Nystrom provides a handful of benchmarks in his [repository](https://github.com/munificent/craftinginterpreters), one specifically called `zoo_batch.lox`. The script simply create an instance of an object and runs the objects methods in a 10 second loop. The results of `zoo_batch.lox` is the count of batches completed. I decided to use this same approach for my comparison so I recreated the same code in Golang and C. The results of tests are below:
 
 ![image](https://user-images.githubusercontent.com/29135072/183302721-85ec665b-4b3c-41a1-b730-95c78ff4fe58.png)
@@ -106,6 +106,6 @@ After completing both interpreters I wanted to spend some time to get an idea on
 
 **Note:** I disabled all optimizations for the C and Golang compiled binaries.
 
-### Credits
+## Credits
 Nystrom, R., 2015. Crafting interpreters.
 
