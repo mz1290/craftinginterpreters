@@ -26,6 +26,8 @@ performance and understanding the "why" behind each design aspect. Unlike
 bytecode instructions. Every component of `clox` was implemented entirely by 
 hand.
 
+![image](https://user-images.githubusercontent.com/29135072/183303132-bfcf7a27-046a-45fa-9751-0733347017ba.png)
+
 #### Lox Features
 - A C-like scripting language
 - Dynamically typed
